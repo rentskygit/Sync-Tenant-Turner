@@ -98,7 +98,7 @@ function mapPropertyData(record) {
 async function getPropertiesFromAirtable() {
     const records = [];
     
-    await base('Propiedades')
+    await base('Automatic apartments')
         .select({
             filterByFormula: `{Published} = FALSE()`, // Solo propiedades no publicadas
             maxRecords: 10 // Límite para evitar sobrecarga
@@ -135,7 +135,7 @@ async function createPropertyInTenantTurner(propertyData) {
 }
 
 async function markAsPublished(recordId) {
-    await base('Propiedades').update(recordId, {
+    await base('Automatic apartments').update(recordId, {
         Published: true,
         'Date Published': new Date().toISOString()
     });
