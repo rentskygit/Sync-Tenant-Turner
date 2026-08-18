@@ -4,7 +4,8 @@
   "description": "Sincroniza propiedades desde Airtable a Tenant Turner",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "node src/test-connection.js"
   },
   "dependencies": {
     "airtable": "^0.12.0",
