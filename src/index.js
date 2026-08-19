@@ -18,7 +18,6 @@ const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 function mapPropertyData(record) {
     const fields = record.fields;
     
-    // Mapear tipo de propiedad
     const propertyTypeMap = {
         'Apartamento': 'apartment',
         'Casa': 'house',
@@ -27,7 +26,6 @@ function mapPropertyData(record) {
         'Duplex': 'duplex'
     };
 
-    // Mapear plazo de arrendamiento
     const leaseTermMap = {
         '6 meses': '6',
         '12 meses': '12',
@@ -35,9 +33,8 @@ function mapPropertyData(record) {
         'Mes a mes': 'monthly'
     };
 
-    // Construir objeto según la documentación de Tenant Turner
     return {
-        // Campos OBLIGATORIOS según documentación
+        // Campos OBLIGATORIOS
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
@@ -45,13 +42,13 @@ function mapPropertyData(record) {
         propertyType: propertyTypeMap[fields['Rental Type']] || 'apartment',
         description: fields.Description || '',
         
-        // Fotos - OBLIGATORIO (array de objetos con url)
+        // Fotos - OBLIGATORIO
         photos: fields['Upload photos'] ? fields['Upload photos'].map(img => ({
             url: img.url,
             isPrimary: false
         })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', isPrimary: true }],
         
-        // Características - OBLIGATORIO (objeto)
+        // Características - OBLIGATORIO
         propertyFeatures: {
             parking: fields.Parking || '',
             parkingSpots: parseInt(fields.Spot) || 0,
@@ -60,8 +57,27 @@ function mapPropertyData(record) {
             laundry: fields.Laundry || ''
         },
         
-        // Amenidades - OBLIGATORIO (array de strings)
+        // Amenidades - OBLIGATORIO
         propertyAmenities: fields.Amenities || [],
+        
+        // ============================================
+        // CAMPOS OBLIGATORIOS SEGÚN DOCUMENTACIÓN
+        // ============================================
+        owners: [
+            {
+                name: fields['Owner Name'] || 'Propietario Principal',
+                email: fields['Owner Email'] || 'owner@example.com',
+                phone: fields['Owner Phone'] || '555-0000'
+            }
+        ],
+        
+        occupants: [
+            {
+                name: 'Sin ocupantes',
+                email: 'none@example.com',
+                phone: '555-0000'
+            }
+        ],
         
         // Campos opcionales
         address2: fields.Unit ? `#${fields.Unit}` : '',
@@ -74,8 +90,6 @@ function mapPropertyData(record) {
         availableDate: fields['Date Available For Move-In'] || '',
         minimumLeaseTerm: leaseTermMap[fields['Lease Term']] || '12',
         virtualTour: fields['Visual Tour'] || '',
-        
-        // Servicios incluidos (utilities) como array
         utilities: fields.Utilities || []
     };
 }
@@ -102,7 +116,6 @@ async function getPropertiesFromAirtable() {
 }
 
 async function createPropertyInTenantTurner(propertyData) {
-    // 🔑 Codificar la API Key en Base64 para Basic Auth
     const encodedApiKey = Buffer.from(TENANT_TURNER_API_KEY).toString('base64');
     
     console.log(`🔑 Longitud de la API Key: ${TENANT_TURNER_API_KEY?.length || 0}`);
@@ -156,18 +169,11 @@ async function main() {
         
         for (const record of properties) {
             try {
-                // 1. Mapear datos
                 const propertyData = mapPropertyData(record);
-                
-                // 2. Enviar a Tenant Turner
                 await createPropertyInTenantTurner(propertyData);
-                
-                // 3. Marcar como publicado en Airtable
                 await markAsPublished(record.id);
-                
             } catch (error) {
                 console.error(`❌ Falló la propiedad ${record.id}`);
-                // Continuar con la siguiente propiedad
             }
         }
         
@@ -183,7 +189,6 @@ async function main() {
 // EJECUCIÓN
 // ========================================
 
-// Validar variables de entorno
 const requiredEnv = ['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID', 'TENANT_TURNER_API_KEY'];
 const missing = requiredEnv.filter(key => !process.env[key]);
 
