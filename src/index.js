@@ -13,18 +13,48 @@ const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 // ========================================
-// MAPEO DIRECTO - SIN TRANSFORMACIONES
+// MAPEO CON NOMBRES CORRECTOS DE AIRTABLE
 // ========================================
 function mapPropertyData(record) {
     const fields = record.fields;
     
-    // Construir objeto con los mismos nombres que Tenant Turner
+    // 🔍 LOG DE CAMPOS DISPONIBLES
+    console.log('📋 Campos disponibles en Airtable:', Object.keys(fields));
+    console.log('📋 Valores importantes:', {
+        'Square Fee': fields['Square Fee'],
+        'Price': fields.Price,
+        'Address': fields.Address,
+        'PropertyType': fields.PropertyType
+    });
+    
+    // ============================================
+    // VALIDACIÓN DE CAMPOS CON NOMBRES DE AIRTABLE
+    // ============================================
+    
+    // Square Feet - En Airtable se llama "Square Fee"
+    let squareFeet = parseInt(fields['Square Fee']) || 850;
+    if (squareFeet < 100) squareFeet = 850;
+    if (squareFeet > 20000) squareFeet = 20000;
+    
+    // Rent Amount - En Airtable se llama "Price"
+    let rentAmount = parseFloat(fields.Price) || 1500;
+    rentAmount = Math.round(rentAmount * 100) / 100;
+    if (rentAmount < 100) rentAmount = 1500;
+    if (rentAmount > 10000) rentAmount = 10000;
+    
+    // Deposit - En Airtable se llama "Deposit"
+    let depositAmount = parseFloat(fields.Deposit) || 0;
+    depositAmount = Math.round(depositAmount * 100) / 100;
+    
+    // ============================================
+    // CONSTRUCCIÓN DEL OBJETO
+    // ============================================
     return {
         // Campos obligatorios
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
-        zipCode: fields.ZipCode ? String(fields.ZipCode).padStart(5, '0') : '00000',
+        zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
         propertyType: fields.PropertyType || 'Apartment Unit',
         description: fields.Description || '',
         
@@ -37,13 +67,13 @@ function mapPropertyData(record) {
         // Características - Obligatorio
         propertyFeatures: {
             parking: fields.ParkingType || 'None',
-            parkingSpots: parseInt(fields.ParkingSpots) || 0,
+            parkingSpots: parseInt(fields.Spot) || 0,
             cooling: fields.CoolingSystem || 'None',
-            heating: fields.HeatingSystem || 'None',
+            heating: fields.HeaterSystem || 'None',
             laundry: fields.Laundry || 'None'
         },
         
-        // Amenidades - Obligatorio (array de strings)
+        // Amenidades - Obligatorio
         propertyAmenities: fields.Amenities || [],
         
         // Owners - Obligatorio
@@ -64,17 +94,17 @@ function mapPropertyData(record) {
             }
         ],
         
-        // Campos opcionales
-        address2: fields.Address2 || '',
-        descriptionTitle: fields.DescriptionTitle || '',
-        bedrooms: parseInt(fields.Bedrooms) || 0,
+        // Campos opcionales CON VALORES VÁLIDOS
+        address2: fields.Unit || '',
+        descriptionTitle: fields['Description Title'] || '',
+        bedrooms: parseInt(fields.Beds) || 0,
         bathrooms: parseFloat(fields.Bathrooms) || 0,
-        squareFeet: parseInt(fields.SquareFeet) || 850,
-        rentAmount: parseFloat(fields.RentAmount) || 0,
-        depositAmount: parseFloat(fields.DepositAmount) || 0,
-        availableDate: fields.AvailableDate || '',
+        squareFeet: squareFeet, // ← Mapeado desde "Square Fee"
+        rentAmount: rentAmount, // ← Mapeado desde "Price"
+        depositAmount: depositAmount, // ← Mapeado desde "Deposit"
+        availableDate: fields['Date Available For Move-In'] || '',
         minimumLeaseTerm: fields.LeaseTerm || 'One Year',
-        virtualTour: fields.VirtualTour || '',
+        virtualTour: fields['Visual Tour'] || '',
         utilities: fields.UtilitiesIncluded || []
     };
 }
@@ -107,13 +137,14 @@ async function createPropertyInTenantTurner(propertyData) {
     console.log(`🔑 Primeros 5 caracteres: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
     console.log(`📤 Enviando a Tenant Turner: ${propertyData.address}`);
     
-    // Log del payload para depuración
-    console.log('📋 Payload:', JSON.stringify({
+    // Log detallado del payload con los valores corregidos
+    console.log('📋 Payload (valores clave):', JSON.stringify({
         address: propertyData.address,
+        squareFeet: propertyData.squareFeet,
+        rentAmount: propertyData.rentAmount,
+        depositAmount: propertyData.depositAmount,
         propertyType: propertyData.propertyType,
-        leaseTerm: propertyData.minimumLeaseTerm,
-        amenities: propertyData.propertyAmenities,
-        utilities: propertyData.utilities
+        leaseTerm: propertyData.minimumLeaseTerm
     }, null, 2));
     
     try {
@@ -127,6 +158,7 @@ async function createPropertyInTenantTurner(propertyData) {
         });
         
         console.log(`✅ Propiedad creada exitosamente: ${propertyData.address}`);
+        console.log(`📋 ID en Tenant Turner: ${response.data?.id || 'N/A'}`);
         return response.data;
     } catch (error) {
         if (error.response) {
