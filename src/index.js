@@ -113,6 +113,29 @@ async function getPropertiesFromAirtable() {
 }
 
 async function createPropertyInTenantTurner(propertyData) {
+    ///
+    console.log(`🔑 Longitud de la API Key: ${TENANT_TURNER_API_KEY?.length || 0}`);
+    console.log(`🔑 Primeros 5 caracteres de la API Key: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
+    
+    try {
+        const response = await axios.post(TENANT_TURNER_API_URL, propertyData, {
+            headers: {
+                'Authorization': `Bearer ${TENANT_TURNER_API_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        console.log(`✅ Propiedad creada: ${propertyData.address}`);
+        return response.data;
+    } catch (error) {
+        if (error.response) {
+            console.error(`❌ Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+            console.error(`📋 Headers enviados: ${JSON.stringify(error.config.headers)}`);
+        } else {
+            console.error(`❌ Error de red: ${error.message}`);
+        }
+        throw error;
+    }
+    ///
     try {
         const response = await axios.post(TENANT_TURNER_API_URL, propertyData, {
             headers: {
