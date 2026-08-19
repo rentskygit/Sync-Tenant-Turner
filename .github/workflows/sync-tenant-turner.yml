@@ -16,9 +16,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       
-      - name: Generate package-lock.json and install dependencies
+      - name: Install dependencies
         run: |
           npm install --package-lock-only
           npm ci
@@ -28,4 +28,5 @@ jobs:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
           TENANT_TURNER_API_KEY: ${{ secrets.TENANT_TURNER_API_KEY }}
+          NODE_OPTIONS: '--dns-result-order=ipv4first'
         run: node src/index.js
