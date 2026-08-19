@@ -12,21 +12,14 @@ const base = airtable.base(process.env.AIRTABLE_BASE_ID);
 const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
-// Mapeo de campos de Airtable a Tenant Turner
+// ========================================
+// MAPEO DE CAMPOS SEGÚN DOCUMENTACIÓN DE TT
+// ========================================
 function mapPropertyData(record) {
     const fields = record.fields;
     
-    // Construir dirección completa
-    const fullAddress = [
-        fields.Address,
-        fields.Unit ? `#${fields.Unit}` : '',
-        fields.City,
-        fields.State,
-        fields.Zip
-    ].filter(Boolean).join(', ');
-
-    // Mapear opciones de Tenant Turner (ajusta según la documentación de TT)
-    const rentalTypeMap = {
+    // Mapear tipo de propiedad
+    const propertyTypeMap = {
         'Apartamento': 'apartment',
         'Casa': 'house',
         'Condo': 'condo',
@@ -34,13 +27,7 @@ function mapPropertyData(record) {
         'Duplex': 'duplex'
     };
 
-    const parkingMap = {
-        'Garaje': 'garage',
-        'Calle': 'street',
-        'Cubierto': 'covered',
-        'Sin estacionamiento': 'none'
-    };
-
+    // Mapear plazo de arrendamiento
     const leaseTermMap = {
         '6 meses': '6',
         '12 meses': '12',
@@ -48,46 +35,48 @@ function mapPropertyData(record) {
         'Mes a mes': 'monthly'
     };
 
+    // Construir objeto según la documentación de Tenant Turner
     return {
-        // Campos obligatorios para Tenant Turner
-        address: fullAddress,
-        unit: fields.Unit || '',
+        // Campos OBLIGATORIOS según documentación
+        address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
         zipCode: fields.Zip ? String(fields.Zip) : '',
+        propertyType: propertyTypeMap[fields['Rental Type']] || 'apartment',
+        description: fields.Description || '',
         
-        // Datos de la propiedad
-        rentalType: rentalTypeMap[fields['Rental Type']] || 'apartment',
+        // Fotos - OBLIGATORIO (array de objetos con url)
+        photos: fields['Upload photos'] ? fields['Upload photos'].map(img => ({
+            url: img.url,
+            isPrimary: false
+        })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', isPrimary: true }],
+        
+        // Características - OBLIGATORIO (objeto)
+        propertyFeatures: {
+            parking: fields.Parking || '',
+            parkingSpots: parseInt(fields.Spot) || 0,
+            cooling: fields['Cooling system'] || '',
+            heating: fields['Heater system'] || '',
+            laundry: fields.Laundry || ''
+        },
+        
+        // Amenidades - OBLIGATORIO (array de strings)
+        propertyAmenities: fields.Amenities || [],
+        
+        // Campos opcionales
+        address2: fields.Unit ? `#${fields.Unit}` : '',
+        descriptionTitle: fields['Description Title'] || '',
         bedrooms: parseInt(fields.Beds) || 0,
         bathrooms: parseFloat(fields.Bathrooms) || 0,
         squareFeet: parseInt(fields['Square Fee']) || 0,
-        price: parseFloat(fields.Price) || 0,
-        deposit: parseFloat(fields.Deposit) || 0,
-        
-        // Descripción
-        title: fields['Description Title'] || '',
-        description: fields.Description || '',
-        
-        // Tour virtual
-        virtualTourUrl: fields['Visual Tour'] || '',
-        
-        // Características
-        parking: parkingMap[fields.Parking] || 'none',
-        parkingSpots: parseInt(fields.Spot) || 0,
-        cooling: fields['Cooling system'] || '',
-        heating: fields['Heater system'] || '',
-        laundry: fields.Laundry || '',
-        
-        // Amenidades y servicios
-        amenities: fields.Amenities ? fields.Amenities.join(', ') : '',
-        utilities: fields.Utilities ? fields.Utilities.join(', ') : '',
-        
-        // Fechas y términos
-        leaseTerm: leaseTermMap[fields['Lease Term']] || '12',
+        rentAmount: parseFloat(fields.Price) || 0,
+        depositAmount: parseFloat(fields.Deposit) || 0,
         availableDate: fields['Date Available For Move-In'] || '',
+        minimumLeaseTerm: leaseTermMap[fields['Lease Term']] || '12',
+        virtualTour: fields['Visual Tour'] || '',
         
-        // URLs de imágenes (importante: deben ser URLs públicas)
-        images: fields['Upload photos'] ? fields['Upload photos'].map(img => img.url) : []
+        // Servicios incluidos (utilities) como array
+        utilities: fields.Utilities || []
     };
 }
 
@@ -100,8 +89,8 @@ async function getPropertiesFromAirtable() {
     
     await base('Automatic apartments')
         .select({
-            filterByFormula: `{Published} = FALSE()`, // Solo propiedades no publicadas
-            maxRecords: 10 // Límite para evitar sobrecarga
+            filterByFormula: `{Published} = FALSE()`,
+            maxRecords: 10
         })
         .eachPage((pageRecords, fetchNextPage) => {
             records.push(...pageRecords);
@@ -113,43 +102,27 @@ async function getPropertiesFromAirtable() {
 }
 
 async function createPropertyInTenantTurner(propertyData) {
-    ///
+    // 🔑 Codificar la API Key en Base64 para Basic Auth
+    const encodedApiKey = Buffer.from(TENANT_TURNER_API_KEY).toString('base64');
+    
     console.log(`🔑 Longitud de la API Key: ${TENANT_TURNER_API_KEY?.length || 0}`);
-    console.log(`🔑 Primeros 5 caracteres de la API Key: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
+    console.log(`🔑 Primeros 5 caracteres: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
+    console.log(`📤 Enviando a Tenant Turner: ${propertyData.address}`);
     
     try {
         const response = await axios.post(TENANT_TURNER_API_URL, propertyData, {
             headers: {
-                'Authorization': `Bearer ${TENANT_TURNER_API_KEY}`,
+                'Authorization': `Basic ${encodedApiKey}`,
                 'Content-Type': 'application/json'
             }
         });
-        console.log(`✅ Propiedad creada: ${propertyData.address}`);
+        
+        console.log(`✅ Propiedad creada exitosamente: ${propertyData.address}`);
         return response.data;
     } catch (error) {
         if (error.response) {
             console.error(`❌ Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
             console.error(`📋 Headers enviados: ${JSON.stringify(error.config.headers)}`);
-        } else {
-            console.error(`❌ Error de red: ${error.message}`);
-        }
-        throw error;
-    }
-    ///
-    try {
-        const response = await axios.post(TENANT_TURNER_API_URL, propertyData, {
-            headers: {
-                'Authorization': `Bearer ${TENANT_TURNER_API_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        console.log(`✅ Propiedad creada: ${propertyData.address}`);
-        return response.data;
-    } catch (error) {
-        if (error.response) {
-            // La API respondió con un error
-            console.error(`❌ Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
         } else {
             console.error(`❌ Error de red: ${error.message}`);
         }
@@ -185,7 +158,6 @@ async function main() {
             try {
                 // 1. Mapear datos
                 const propertyData = mapPropertyData(record);
-                console.log(`📤 Publicando: ${propertyData.address}`);
                 
                 // 2. Enviar a Tenant Turner
                 await createPropertyInTenantTurner(propertyData);
