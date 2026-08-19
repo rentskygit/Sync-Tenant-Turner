@@ -13,103 +13,49 @@ const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 // ========================================
-// MAPEO DE CAMPOS CORREGIDO
+// MAPEO DIRECTO - SIN TRANSFORMACIONES
 // ========================================
 function mapPropertyData(record) {
     const fields = record.fields;
     
-    // Mapear tipo de propiedad - VALORES CORRECTOS (minúscula)
-    const propertyTypeMap = {
-        'Apartamento': 'apartment',
-        'Casa': 'house',
-        'Condo': 'condo',
-        'Estudio': 'studio',
-        'Duplex': 'duplex'
-    };
-
-    // Mapear plazo de arrendamiento - FORMATO NUMÉRICO
-    const leaseTermMap = {
-        '6 meses': '6',
-        '12 meses': '12',
-        '24 meses': '24',
-        'Mes a mes': 'monthly'
-    };
-
-    // Mapear lavandería
-    const laundryMap = {
-        'In-unit': 'In Unit',
-        'En el edificio': 'On Site',
-        'Comunitaria': 'Community',
-        'Sin lavandería': 'None'
-    };
-
-    // Mapear amenities - VALORES CORRECTOS
-    const amenityMap = {
-        'Piscina': 'Swimming Pool',
-        'Gimnasio': 'Fitness Center',
-        'Seguridad 24h': '24 Hour Security',
-        'Estacionamiento': 'Parking',
-        'Ascensor': 'Elevator',
-        'Balcón': 'Balcony',
-        'Aire acondicionado': 'Air Conditioning',
-        'Calefacción': 'Heating',
-        'Lavandería': 'Laundry',
-        'Mascotas permitidas': 'Pets Allowed',
-        'Amueblado': 'Furnished',
-        'Acceso discapacitados': 'Wheelchair Access',
-        'Área de juegos': 'Playground',
-        'Jacuzzi': 'Jacuzzi',
-        'Sauna': 'Sauna'
-    };
-
-    // Mapear utilities
-    const utilityMap = {
-        'Agua': 'Water',
-        'Electricidad': 'Electricity',
-        'Gas': 'Gas',
-        'Internet': 'Internet',
-        'Cable': 'Cable',
-        'Recolección de basura': 'Trash',
-        'Mantenimiento de áreas comunes': 'Common Area Maintenance'
-    };
-
+    // Construir objeto con los mismos nombres que Tenant Turner
     return {
-        // Campos OBLIGATORIOS
+        // Campos obligatorios
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
-        zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
-        propertyType: propertyTypeMap[fields['Rental Type']] || 'apartment',
+        zipCode: fields.ZipCode ? String(fields.ZipCode).padStart(5, '0') : '00000',
+        propertyType: fields.PropertyType || 'Apartment Unit',
         description: fields.Description || '',
         
-        // Fotos - OBLIGATORIO
+        // Fotos - Obligatorio
         photos: fields['Upload photos'] ? fields['Upload photos'].map(img => ({
             url: img.url,
             isPrimary: false
         })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', isPrimary: true }],
         
-        // Características - OBLIGATORIO
+        // Características - Obligatorio
         propertyFeatures: {
-            parking: fields.Parking || 'None',
-            parkingSpots: parseInt(fields.Spot) || 0,
-            cooling: fields['Cooling system'] || '',
-            heating: fields['Heater system'] || '',
-            laundry: laundryMap[fields.Laundry] || 'None'
+            parking: fields.ParkingType || 'None',
+            parkingSpots: parseInt(fields.ParkingSpots) || 0,
+            cooling: fields.CoolingSystem || 'None',
+            heating: fields.HeatingSystem || 'None',
+            laundry: fields.Laundry || 'None'
         },
         
-        // Amenidades - Mapeo corregido
-        propertyAmenities: fields.Amenities ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean) : [],
+        // Amenidades - Obligatorio (array de strings)
+        propertyAmenities: fields.Amenities || [],
         
-        // Owners - OBLIGATORIO
+        // Owners - Obligatorio
         owners: [
             {
-                name: fields['Owner Name'] || 'Propietario Principal',
-                email: fields['Owner Email'] || 'owner@example.com',
-                phone: fields['Owner Phone'] ? `1${fields['Owner Phone'].replace(/\D/g, '')}` : '13055551234'
+                name: fields.OwnerName || 'Propietario Principal',
+                email: fields.OwnerEmail || 'owner@example.com',
+                phone: fields.OwnerPhone ? `1${fields.OwnerPhone.replace(/\D/g, '')}` : '13055551234'
             }
         ],
         
-        // Occupants - OBLIGATORIO
+        // Occupants - Obligatorio
         occupants: [
             {
                 name: 'Sin ocupantes',
@@ -118,18 +64,18 @@ function mapPropertyData(record) {
             }
         ],
         
-        // Campos opcionales - CON VALORES POR DEFECTO VÁLIDOS
-        address2: fields.Unit ? `#${fields.Unit}` : '',
-        descriptionTitle: fields['Description Title'] || '',
-        bedrooms: parseInt(fields.Beds) || 0,
+        // Campos opcionales
+        address2: fields.Address2 || '',
+        descriptionTitle: fields.DescriptionTitle || '',
+        bedrooms: parseInt(fields.Bedrooms) || 0,
         bathrooms: parseFloat(fields.Bathrooms) || 0,
-        squareFeet: parseInt(fields['Square Fee']) || 850, // VALOR POR DEFECTO VÁLIDO
-        rentAmount: parseFloat(fields.Price) || 0,
-        depositAmount: parseFloat(fields.Deposit) || 0,
-        availableDate: fields['Date Available For Move-In'] || '',
-        minimumLeaseTerm: leaseTermMap[fields['Lease Term']] || '12', // FORMATO NUMÉRICO
-        virtualTour: fields['Visual Tour'] || '',
-        utilities: fields.Utilities ? fields.Utilities.map(u => utilityMap[u] || u).filter(Boolean) : []
+        squareFeet: parseInt(fields.SquareFeet) || 850,
+        rentAmount: parseFloat(fields.RentAmount) || 0,
+        depositAmount: parseFloat(fields.DepositAmount) || 0,
+        availableDate: fields.AvailableDate || '',
+        minimumLeaseTerm: fields.LeaseTerm || 'One Year',
+        virtualTour: fields.VirtualTour || '',
+        utilities: fields.UtilitiesIncluded || []
     };
 }
 
@@ -160,7 +106,15 @@ async function createPropertyInTenantTurner(propertyData) {
     console.log(`🔑 Longitud de la API Key: ${TENANT_TURNER_API_KEY?.length || 0}`);
     console.log(`🔑 Primeros 5 caracteres: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
     console.log(`📤 Enviando a Tenant Turner: ${propertyData.address}`);
-    console.log(`🌐 Usando IPv4 forzado...`);
+    
+    // Log del payload para depuración
+    console.log('📋 Payload:', JSON.stringify({
+        address: propertyData.address,
+        propertyType: propertyData.propertyType,
+        leaseTerm: propertyData.minimumLeaseTerm,
+        amenities: propertyData.propertyAmenities,
+        utilities: propertyData.utilities
+    }, null, 2));
     
     try {
         const response = await axios.post(TENANT_TURNER_API_URL, propertyData, {
@@ -173,12 +127,10 @@ async function createPropertyInTenantTurner(propertyData) {
         });
         
         console.log(`✅ Propiedad creada exitosamente: ${propertyData.address}`);
-        console.log(`📋 ID de propiedad en TT: ${response.data?.id || 'N/A'}`);
         return response.data;
     } catch (error) {
         if (error.response) {
             console.error(`❌ Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
-            console.error(`📋 Headers enviados: ${JSON.stringify(error.config.headers)}`);
         } else {
             console.error(`❌ Error de red: ${error.message}`);
         }
