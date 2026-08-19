@@ -13,26 +13,29 @@ const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 // ========================================
-// MAPEO DE CAMPOS
+// MAPEO DE CAMPOS CORREGIDO
 // ========================================
 function mapPropertyData(record) {
     const fields = record.fields;
     
+    // Mapear tipo de propiedad - VALORES CORRECTOS (minúscula)
     const propertyTypeMap = {
-        'Apartamento': 'Apartment',
-        'Casa': 'House',
-        'Condo': 'Condo',
-        'Estudio': 'Studio',
-        'Duplex': 'Duplex'
+        'Apartamento': 'apartment',
+        'Casa': 'house',
+        'Condo': 'condo',
+        'Estudio': 'studio',
+        'Duplex': 'duplex'
     };
 
+    // Mapear plazo de arrendamiento - FORMATO NUMÉRICO
     const leaseTermMap = {
-        '6 meses': '6 Months',
-        '12 meses': '12 Months',
-        '24 meses': '24 Months',
-        'Mes a mes': 'Month to Month'
+        '6 meses': '6',
+        '12 meses': '12',
+        '24 meses': '24',
+        'Mes a mes': 'monthly'
     };
 
+    // Mapear lavandería
     const laundryMap = {
         'In-unit': 'In Unit',
         'En el edificio': 'On Site',
@@ -40,9 +43,10 @@ function mapPropertyData(record) {
         'Sin lavandería': 'None'
     };
 
+    // Mapear amenities - VALORES CORRECTOS
     const amenityMap = {
-        'Piscina': 'Pool',
-        'Gimnasio': 'Gym',
+        'Piscina': 'Swimming Pool',
+        'Gimnasio': 'Fitness Center',
         'Seguridad 24h': '24 Hour Security',
         'Estacionamiento': 'Parking',
         'Ascensor': 'Elevator',
@@ -58,6 +62,7 @@ function mapPropertyData(record) {
         'Sauna': 'Sauna'
     };
 
+    // Mapear utilities
     const utilityMap = {
         'Agua': 'Water',
         'Electricidad': 'Electricity',
@@ -69,18 +74,21 @@ function mapPropertyData(record) {
     };
 
     return {
+        // Campos OBLIGATORIOS
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
         zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
-        propertyType: propertyTypeMap[fields['Rental Type']] || 'Apartment',
+        propertyType: propertyTypeMap[fields['Rental Type']] || 'apartment',
         description: fields.Description || '',
         
+        // Fotos - OBLIGATORIO
         photos: fields['Upload photos'] ? fields['Upload photos'].map(img => ({
             url: img.url,
             isPrimary: false
         })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', isPrimary: true }],
         
+        // Características - OBLIGATORIO
         propertyFeatures: {
             parking: fields.Parking || 'None',
             parkingSpots: parseInt(fields.Spot) || 0,
@@ -89,8 +97,10 @@ function mapPropertyData(record) {
             laundry: laundryMap[fields.Laundry] || 'None'
         },
         
+        // Amenidades - Mapeo corregido
         propertyAmenities: fields.Amenities ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean) : [],
         
+        // Owners - OBLIGATORIO
         owners: [
             {
                 name: fields['Owner Name'] || 'Propietario Principal',
@@ -99,6 +109,7 @@ function mapPropertyData(record) {
             }
         ],
         
+        // Occupants - OBLIGATORIO
         occupants: [
             {
                 name: 'Sin ocupantes',
@@ -107,15 +118,16 @@ function mapPropertyData(record) {
             }
         ],
         
+        // Campos opcionales - CON VALORES POR DEFECTO VÁLIDOS
         address2: fields.Unit ? `#${fields.Unit}` : '',
         descriptionTitle: fields['Description Title'] || '',
         bedrooms: parseInt(fields.Beds) || 0,
         bathrooms: parseFloat(fields.Bathrooms) || 0,
-        squareFeet: parseInt(fields['Square Fee']) || 850,
+        squareFeet: parseInt(fields['Square Fee']) || 850, // VALOR POR DEFECTO VÁLIDO
         rentAmount: parseFloat(fields.Price) || 0,
         depositAmount: parseFloat(fields.Deposit) || 0,
         availableDate: fields['Date Available For Move-In'] || '',
-        minimumLeaseTerm: leaseTermMap[fields['Lease Term']] || '12 Months',
+        minimumLeaseTerm: leaseTermMap[fields['Lease Term']] || '12', // FORMATO NUMÉRICO
         virtualTour: fields['Visual Tour'] || '',
         utilities: fields.Utilities ? fields.Utilities.map(u => utilityMap[u] || u).filter(Boolean) : []
     };
@@ -156,12 +168,12 @@ async function createPropertyInTenantTurner(propertyData) {
                 'Authorization': `Basic ${encodedApiKey}`,
                 'Content-Type': 'application/json'
             },
-            // 🔧 FORZAR IPv4 Y TIMEOUT
             family: 4,
             timeout: 30000
         });
         
         console.log(`✅ Propiedad creada exitosamente: ${propertyData.address}`);
+        console.log(`📋 ID de propiedad en TT: ${response.data?.id || 'N/A'}`);
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -169,7 +181,6 @@ async function createPropertyInTenantTurner(propertyData) {
             console.error(`📋 Headers enviados: ${JSON.stringify(error.config.headers)}`);
         } else {
             console.error(`❌ Error de red: ${error.message}`);
-            console.error(`💡 Si el error persiste, verifica que la URL de la API sea correcta`);
         }
         throw error;
     }
