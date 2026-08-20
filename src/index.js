@@ -13,21 +13,13 @@ const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 // ========================================
-// MAPEO CON NOMBRES CORRECTOS DE AIRTABLE
+// MAPEO COMPLETO - TODOS LOS CAMPOS
 // ========================================
 function mapPropertyData(record) {
     const fields = record.fields;
     
-    console.log('📋 Campos disponibles en Airtable:', Object.keys(fields));
-    console.log('📋 Valores importantes:', {
-        'Square Fee': fields['Square Fee'],
-        'Price': fields.Price,
-        'Address': fields.Address,
-        'PropertyType': fields.PropertyType
-    });
-    
     // ============================================
-    // VALIDACIÓN DE CAMPOS CON NOMBRES DE AIRTABLE
+    // VALIDACIÓN DE CAMPOS
     // ============================================
     
     let squareFootage = parseInt(fields['Square Fee']) || 850;
@@ -42,15 +34,20 @@ function mapPropertyData(record) {
     let depositAmount = parseFloat(fields.Deposit) || 0;
     depositAmount = Math.round(depositAmount * 100) / 100;
     
+    let parkingSpots = parseInt(fields.Spot) || 0;
+    
     // ============================================
-    // CONSTRUCCIÓN DEL OBJETO
+    // CONSTRUCCIÓN DEL OBJETO - TODOS LOS CAMPOS
     // ============================================
     return {
+        // ==========================================
+        // CAMPOS OBLIGATORIOS
+        // ==========================================
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
         zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
-        propertyType: fields['Rental Type'] || 'Apartment Unit', 
+        propertyType: fields['Rental Type'] || 'Apartment Unit',
         description: fields.Description || '',
         
         photos: fields['Upload photos '] ? fields['Upload photos '].map(img => ({
@@ -60,9 +57,9 @@ function mapPropertyData(record) {
         
         propertyFeatures: {
             parking: fields.Parking || 'None',
-            parkingSpots: parseInt(fields.Spot) || 0,
-            cooling: fields['Cooling system'] || 'None', 
-            heating: fields['Heater system'] || 'None', 
+            parkingSpots: parkingSpots,
+            cooling: fields['Cooling system'] || 'None',
+            heating: fields['Heater system'] || 'None',
             laundry: fields.Laundry || 'None'
         },
         
@@ -84,17 +81,29 @@ function mapPropertyData(record) {
             }
         ],
         
-        address2: fields.Unit || '',
+        // ==========================================
+        // CAMPOS AGREGADOS - DATOS FALTANTES
+        // ==========================================
+        
+        assignedUserEmail: 'Cmelo@jcmrealtygroup.com',
+        
+        availableDate: fields['Date Available For Move-In'] || '',
+        
         descriptionTitle: fields['Description Title'] || '',
+        
+        utilities: fields.Utilities || [],
+        
+        // ==========================================
+        // CAMPOS ADICIONALES
+        // ==========================================
+        address2: fields.Unit || '',
         bedrooms: parseInt(fields.Beds) || 0,
         bathrooms: parseFloat(fields.Bathrooms) || 0,
-        SquareFootage: squareFootage, 
+        SquareFootage: squareFootage,
         rentAmount: rentAmount,
         depositAmount: depositAmount,
-        availableDate: fields['Date Available For Move-In'] || '',
-        minimumLeaseTerm: fields['Lease Term'] || 'One Year', 
-        virtualTour: fields['Visual Tour'] || '',
-        utilities: fields.Utilities || [] 
+        minimumLeaseTerm: fields['Lease Term'] || 'One Year',
+        virtualTour: fields['Visual Tour'] || ''
     };
 }
 
@@ -126,13 +135,26 @@ async function createPropertyInTenantTurner(propertyData) {
     console.log(`🔑 Primeros 5 caracteres: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
     console.log(`📤 Enviando a Tenant Turner: ${propertyData.address}`);
     
-    console.log('📋 Payload (valores clave):', JSON.stringify({
+    console.log('📋 Payload completo:', JSON.stringify({
         address: propertyData.address,
+        city: propertyData.city,
+        state: propertyData.state,
+        zipCode: propertyData.zipCode,
+        propertyType: propertyData.propertyType,
+        description: propertyData.description.substring(0, 50) + '...',
+        descriptionTitle: propertyData.descriptionTitle,
+        availableDate: propertyData.availableDate,
+        assignedUserEmail: propertyData.assignedUserEmail,
         SquareFootage: propertyData.SquareFootage,
         rentAmount: propertyData.rentAmount,
         depositAmount: propertyData.depositAmount,
-        propertyType: propertyData.propertyType,
-        minimumLeaseTerm: propertyData.minimumLeaseTerm
+        minimumLeaseTerm: propertyData.minimumLeaseTerm,
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        propertyFeatures: propertyData.propertyFeatures,
+        propertyAmenities: propertyData.propertyAmenities,
+        utilities: propertyData.utilities,
+        owners: propertyData.owners
     }, null, 2));
     
     try {
@@ -159,10 +181,14 @@ async function createPropertyInTenantTurner(propertyData) {
 }
 
 async function markAsPublished(recordId) {
-    await base('Automatic apartments').update(recordId, {
-        Published: true
-    });
-    console.log(`📝 Marcado como publicado el registro ${recordId}`);
+    try {
+        await base('Automatic apartments').update(recordId, {
+            'Published': true
+        });
+        console.log(`📝 Marcado como publicado el registro ${recordId}`);
+    } catch (error) {
+        console.error(`❌ Error al marcar como publicado: ${error.message}`);
+    }
 }
 
 // ========================================
