@@ -160,8 +160,7 @@ async function createPropertyInTenantTurner(propertyData) {
 
 async function markAsPublished(recordId) {
     await base('Automatic apartments').update(recordId, {
-        Published: true,
-        'Date Published': new Date().toISOString()
+        Published: true
     });
     console.log(`📝 Marcado como publicado el registro ${recordId}`);
 }
