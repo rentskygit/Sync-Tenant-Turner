@@ -38,7 +38,7 @@ function mapPropertyData(record) {
     // ============================================
     
     const coolingMap = {
-        'Evaporative': 'Evaporative Cooler',
+        'Evaporative': 'Evaporative',
         'Central Air': 'Central Air',
         'None': 'None',
         'Geothermal': 'Geothermal',
