@@ -1,9 +1,5 @@
 const Airtable = require('airtable');
 const axios = require('axios');
-
-// ========================================
-// CONFIGURACIÓN
-// ========================================
 const airtable = new Airtable({
     apiKey: process.env.AIRTABLE_API_KEY
 });
@@ -12,9 +8,6 @@ const base = airtable.base(process.env.AIRTABLE_BASE_ID);
 const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
-// ========================================
-// MAPEO COMPLETO - VERSIÓN CORREGIDA SEGÚN DOCUMENTACIÓN
-// ========================================
 function mapPropertyData(record) {
     const fields = record.fields;
     
@@ -81,7 +74,7 @@ function mapPropertyData(record) {
     // ============================================
     
     let squareFootage = parseInt(fields['Square Fee']) || 850;
-    if (squareFootage < 100) squareFootage = 850;
+    if (squareFootage < 100) squareFootage = 100;
     if (squareFootage > 20000) squareFootage = 20000;
     
     let rentAmount = parseFloat(fields.Price) || 1500;
@@ -107,13 +100,7 @@ function mapPropertyData(record) {
         rentIncludesInternet: utilities.includes('internet')
     };
     
-    // ============================================
-    // CONSTRUCCIÓN DEL OBJETO - SEGÚN DOCUMENTACIÓN
-    // ============================================
     const propertyData = {
-        // ==========================================
-        // CAMPOS OBLIGATORIOS
-        // ==========================================
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
@@ -121,17 +108,11 @@ function mapPropertyData(record) {
         propertyType: fields['Rental Type'] || 'Apartment Unit',
         description: fields.Description || '',
         
-        // ==========================================
-        // FOTOS
-        // ==========================================
         photos: fields['Upload photos '] ? fields['Upload photos '].map((img, index) => ({
             url: img.url,
             order: index
         })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', order: 0 }],
         
-        // ==========================================
-        // PROPIETARIOS Y OCUPANTES
-        // ==========================================
         owners: [
             {
                 email: fields['Owner Email'] || 'owner@example.com'
@@ -145,9 +126,6 @@ function mapPropertyData(record) {
             }
         ],
         
-        // ==========================================
-        // CARACTERÍSTICAS DE LA PROPIEDAD - CORREGIDAS
-        // ==========================================
         propertyFeatures: {
             laundry: laundryMap[fields.Laundry] || fields.Laundry || 'None',
             parkingType: parkingMap[fields.Parking] || fields.Parking || 'None',
@@ -157,14 +135,8 @@ function mapPropertyData(record) {
             ...rentIncludes
         },
         
-        // ==========================================
-        // AMENIDADES
-        // ==========================================
         propertyAmenities: fields.Amenities || [],
         
-        // ==========================================
-        // CAMPOS CORREGIDOS SEGÚN DOCUMENTACIÓN
-        // ==========================================
         
         assignedUserEmail: 'Cmelo@jcmrealtygroup.com',
         
@@ -180,19 +152,13 @@ function mapPropertyData(record) {
         
         minimumLeaseTerm: fields['Lease Term'] || 'One Year',
         
-        // ==========================================
-        // CAMPOS ADICIONALES
-        // ==========================================
         address2: fields.Unit || '',
         bedrooms: parseInt(fields.Beds) || 0,
         bathrooms: parseFloat(fields.Bathrooms) || 0,
         virtualTour: fields['Visual Tour'] || ''
     };
     
-    // ============================================
-    // LOG DEL PAYLOAD COMPLETO
-    // ============================================
-    console.log('📋 ====== PAYLOAD CORREGIDO ======');
+    console.log('📋 ====== PAYLOAD ======');
     console.log(`  address: ${propertyData.address}`);
     console.log(`  propertyType: ${propertyData.propertyType}`);
     console.log(`  assignedUserEmail: ${propertyData.assignedUserEmail}`);
@@ -219,9 +185,6 @@ function mapPropertyData(record) {
     return propertyData;
 }
 
-// ========================================
-// FUNCIONES PRINCIPALES
-// ========================================
 
 async function getPropertiesFromAirtable() {
     const records = [];
@@ -282,10 +245,6 @@ async function markAsPublished(recordId) {
     }
 }
 
-// ========================================
-// FUNCIÓN PRINCIPAL
-// ========================================
-
 async function main() {
     console.log('🚀 Iniciando sincronización con Tenant Turner...');
     console.log(`⏰ ${new Date().toLocaleString()}`);
@@ -316,9 +275,6 @@ async function main() {
     }
 }
 
-// ========================================
-// EJECUCIÓN
-// ========================================
 
 const requiredEnv = ['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID', 'TENANT_TURNER_API_KEY'];
 const missing = requiredEnv.filter(key => !process.env[key]);
