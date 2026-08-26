@@ -10,86 +10,27 @@ const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 function mapPropertyData(record) {
     const fields = record.fields;
-    
-    // ============================================
-    // LOGS DE DEPURACIÓN
-    // ============================================
-    console.log('🔍 ====== VALORES DE CAMPOS ======');
-    console.log(`  📌 Assigned User: "Cmelo@jcmrealtygroup.com"`);
-    console.log(`  📅 Date Available: "${fields['Date Available For Move-In']}"`);
-    console.log(`  📝 Descriptive Title: "${fields['Description Title']}"`);
-    console.log(`  🅿️ Parking Type: "${fields.Parking}"`);
-    console.log(`  🚗 Parking Count: "${fields.Spot}"`);
-    console.log(`  ❄️ Cooling System: "${fields['Cooling system']}"`);
-    console.log(`  🔥 Heating System: "${fields['Heater system']}"`);
-    console.log(`  🧺 Laundry: "${fields.Laundry}"`);
-    console.log(`  💡 Utilities: "${fields.Utilities}"`);
-    console.log('===============================================\n');
-    
-    // ============================================
-    // MAPEO DE VALORES
-    // ============================================
-    
-    const coolingMap = {
-        'Evaporative': 'Evaporative',
-        'Central Air': 'Central Air',
-        'None': 'None',
-        'Geothermal': 'Geothermal',
-        'Wall': 'Wall',
-        'Solar': 'Solar',
-        'Other': 'Other'
-    };
-    
-    const heatingMap = {
-        'Forced Air': 'Forced Air',
-        'Baseboard': 'Baseboard',
-        'None': 'None',
-        'Heat Pump': 'Heat Pump',
-        'Radiant': 'Radiant',
-        'Stove': 'Stove',
-        'Wall': 'Wall',
-        'Other': 'Other'
-    };
-    
-    const parkingMap = {
-        'None': 'None',
-        'Carport': 'Carport',
-        'Garage Attached': 'Garage Attached',
-        'Garage Detached': 'Garage Detached',
-        'Off-Street': 'Off-Street',
-        'On-Street': 'On-Street'
-    };
-    
-    const laundryMap = {
-        'None': 'None',
-        'In Unit': 'In Unit',
-        'Shared': 'Shared',
-        'Hookups': 'Hookups',
-        'Washer Only': 'Washer Only',
-        'Other': 'Other'
-    };
+
+
     
     // ============================================
     // VALIDACIÓN DE CAMPOS NUMÉRICOS
     // ============================================
     
-    let squareFootage = parseInt(fields['Square Fee']) || 850;
+    let squareFootage = parseInt(fields['Square Fee']);
     if (squareFootage < 100) squareFootage = 100;
     if (squareFootage > 20000) squareFootage = 20000;
     
-    let rentAmount = parseFloat(fields.Price) || 1500;
+    let rentAmount = parseFloat(fields.Price);
     rentAmount = Math.round(rentAmount * 100) / 100;
-    if (rentAmount < 100) rentAmount = 1500;
-    if (rentAmount > 10000) rentAmount = 10000;
+    if (rentAmount < 100) rentAmount = 100;
+    if (rentAmount > 100000) rentAmount = 100000;
     
     let depositAmount = parseFloat(fields.Deposit) || 0;
     depositAmount = Math.round(depositAmount * 100) / 100;
     
     let parkingCount = parseInt(fields.Spot) || 0;
     
-    // ============================================
-    // PROCESAMIENTO DE UTILITIES
-    // ============================================
     const utilities = fields.Utilities || [];
     const rentIncludes = {
         rentIncludesTrash: utilities.includes('trash'),
@@ -206,8 +147,6 @@ async function getPropertiesFromAirtable() {
 async function createPropertyInTenantTurner(propertyData) {
     const encodedApiKey = Buffer.from(TENANT_TURNER_API_KEY).toString('base64');
     
-    console.log(`🔑 Longitud de la API Key: ${TENANT_TURNER_API_KEY?.length || 0}`);
-    console.log(`🔑 Primeros 5 caracteres: ${TENANT_TURNER_API_KEY?.substring(0, 5) || 'VACÍA'}`);
     console.log(`📤 Enviando a Tenant Turner: ${propertyData.address}`);
     
     try {
