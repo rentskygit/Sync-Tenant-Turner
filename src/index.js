@@ -135,17 +135,17 @@ function mapPropertyData(record) {
         // SYNDICATION - CORREGIDO: EN LA RAÍZ
         // ==========================================
         selectAll: true,                    // Select/Deselect All - ACTIVADO
-        zillowInstantTours: false,          // Zillow Instant Tours - DESACTIVADO
+        EnableZillowInstantTouring: false,          // Zillow Instant Tours - DESACTIVADO
         
         // ==========================================
         // RESTRICTIONS - CORREGIDO: EN LA RAÍZ
         // ==========================================
-        moveInDays: false,                  // Require move-in within 1 day - DESACTIVADO
-        allowPets: fields['AllowPets'] || false,
-        maxPets: parseInt(fields['MaxPets']) || 0,
-        allowCats: fields['AllowCats'] || false,
-        allowSmallDogs: fields['AllowSmallDogs'] || false,
-        allowLargeDogs: fields['AllowLargeDogs'] || false,
+        RequireMoveInDateWithinMaximum: fields['RestrictionMoveInDays'] || false,  
+        ConsiderPets: fields['AllowPets'] || false,
+        MaximumNumberOfPets: parseInt(fields['MaxPets']) || 0,
+        AllowCats: fields['AllowCats'] || false,
+        AllowSmallDogs: fields['AllowSmallDogs'] || false,
+        AllowLargeDogs: fields['AllowLargeDogs'] || false,
         requireIncomeRatio: fields['RequireIncomeRatio'] || false
     };
     
