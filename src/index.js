@@ -11,10 +11,6 @@ const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 function mapPropertyData(record) {
     const fields = record.fields;
     
-    // ============================================
-    // VALIDACIÓN DE CAMPOS NUMÉRICOS
-    // ============================================
-    
     let squareFootage = parseInt(fields['Square Fee']);
     if (squareFootage < 100) squareFootage = 100;
     if (squareFootage > 20000) squareFootage = 20000;
@@ -29,9 +25,6 @@ function mapPropertyData(record) {
     
     let parkingCount = parseInt(fields.Spot) || 0;
     
-    // ============================================
-    // UTILITIES
-    // ============================================
     const utilities = fields.Utilities || [];
     const rentIncludes = {
         rentIncludesTrash: utilities.includes('trash'),
@@ -41,10 +34,6 @@ function mapPropertyData(record) {
         rentIncludesCable: utilities.includes('cable'),
         rentIncludesInternet: utilities.includes('internet')
     };
-    
-    // ============================================
-    // AMENIDADES (corrección de valores inválidos)
-    // ============================================
     const amenityMap = {
         'Fenced': 'Fenced Yard',
     };
@@ -53,31 +42,17 @@ function mapPropertyData(record) {
         ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean) 
         : [];
     
-    // ============================================
-    // CONSTRUCCIÓN DEL OBJETO - CORREGIDO
-    // ============================================
     const propertyData = {
-        // ==========================================
-        // CAMPOS OBLIGATORIOS
-        // ==========================================
         address: fields.Address || '',
         city: fields.City || '',
         state: fields.State || '',
         zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
         propertyType: fields['Rental Type'] || 'Apartment Unit',
         description: fields.Description || '',
-        
-        // ==========================================
-        // FOTOS
-        // ==========================================
         photos: fields['Upload photos '] ? fields['Upload photos '].map((img, index) => ({
             url: img.url,
             order: index
         })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', order: 0 }],
-        
-        // ==========================================
-        // PROPIETARIOS Y OCUPANTES
-        // ==========================================
         owners: [
             {
                 email: fields['Owner Email'] || 'owner@example.com'
@@ -90,10 +65,6 @@ function mapPropertyData(record) {
                 email: 'none@example.com'
             }
         ],
-        
-        // ==========================================
-        // CARACTERÍSTICAS
-        // ==========================================
         propertyFeatures: {
             laundry: fields.Laundry || 'None',
             parkingType: fields.Parking || 'None',
@@ -131,11 +102,8 @@ function mapPropertyData(record) {
         bathrooms: parseFloat(fields.Bathrooms) || 0,
         virtualTour: fields['Visual Tour'] || '',
         
-        // ==========================================
-        // SYNDICATION - CORREGIDO: EN LA RAÍZ
-        // ==========================================
-        selectAll: true,                    // Select/Deselect All - ACTIVADO
-        EnableZillowInstantTouring: false,          // Zillow Instant Tours - DESACTIVADO
+        selectAll: true,                   
+        EnableZillowInstantTouring: false,         
         
         // ==========================================
         // RESTRICTIONS - CORREGIDO: EN LA RAÍZ
@@ -149,44 +117,7 @@ function mapPropertyData(record) {
         requireIncomeRatio: fields['RequireIncomeRatio'] || false
     };
     
-    // ============================================
-    // LOG DEL PAYLOAD PARA DEPURACIÓN
-    // ============================================
-    console.log('📋 ====== PAYLOAD CORREGIDO ======');
-    console.log(`  address: ${propertyData.address}`);
-    console.log(`  propertyType: ${propertyData.propertyType}`);
-    console.log(`  assignedUserEmail: ${propertyData.assignedUserEmail}`);
-    console.log(`  dateAvailable: ${propertyData.dateAvailable}`);
-    console.log(`  descriptiveTitle: ${propertyData.descriptiveTitle}`);
-    console.log(`  squareFootage: ${propertyData.squareFootage}`);
-    console.log(`  rentAmount: ${propertyData.rentAmount}`);
-    console.log(`  minimumLeaseTerm: ${propertyData.minimumLeaseTerm}`);
-    console.log(`  propertyFeatures:`);
-    console.log(`    parkingType: ${propertyData.propertyFeatures.parkingType}`);
-    console.log(`    parkingCount: ${propertyData.propertyFeatures.parkingCount}`);
-    console.log(`    coolingSystem: ${propertyData.propertyFeatures.coolingSystem}`);
-    console.log(`    heatingSystem: ${propertyData.propertyFeatures.heatingSystem}`);
-    console.log(`    laundry: ${propertyData.propertyFeatures.laundry}`);
-    console.log(`    rentIncludesTrash: ${propertyData.propertyFeatures.rentIncludesTrash}`);
-    console.log(`    rentIncludesWater: ${propertyData.propertyFeatures.rentIncludesWater}`);
-    console.log(`    rentIncludesElectricity: ${propertyData.propertyFeatures.rentIncludesElectricity}`);
-    console.log(`    rentIncludesGas: ${propertyData.propertyFeatures.rentIncludesGas}`);
-    console.log(`    rentIncludesCable: ${propertyData.propertyFeatures.rentIncludesCable}`);
-    console.log(`    rentIncludesInternet: ${propertyData.propertyFeatures.rentIncludesInternet}`);
-    console.log(`  propertyAmenities: [${propertyData.propertyAmenities.join(', ')}]`);
-    console.log(`  syndication (RAÍZ):`);
-    console.log(`    selectAll: ${propertyData.selectAll}`);
-    console.log(`    zillowInstantTours: ${propertyData.zillowInstantTours}`);
-    console.log(`  restrictions (RAÍZ):`);
-    console.log(`    moveInDays: ${propertyData.moveInDays}`);
-    console.log(`    allowPets: ${propertyData.allowPets}`);
-    console.log(`    maxPets: ${propertyData.maxPets}`);
-    console.log(`    allowCats: ${propertyData.allowCats}`);
-    console.log(`    allowSmallDogs: ${propertyData.allowSmallDogs}`);
-    console.log(`    allowLargeDogs: ${propertyData.allowLargeDogs}`);
-    console.log(`    requireIncomeRatio: ${propertyData.requireIncomeRatio}`);
-    console.log('===============================================\n');
-    
+       
     return propertyData;
 }
 
