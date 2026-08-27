@@ -1,5 +1,6 @@
 const Airtable = require('airtable');
 const axios = require('axios');
+
 const airtable = new Airtable({
     apiKey: process.env.AIRTABLE_API_KEY
 });
@@ -11,6 +12,9 @@ const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 function mapPropertyData(record) {
     const fields = record.fields;
     
+    // ==========================================
+    // PROCESAMIENTO DE CAMPOS NUMÉRICOS
+    // ==========================================
     let squareFootage = parseInt(fields['Square Fee']);
     if (squareFootage < 100) squareFootage = 100;
     if (squareFootage > 20000) squareFootage = 20000;
@@ -25,6 +29,9 @@ function mapPropertyData(record) {
     
     let parkingCount = parseInt(fields.Spot) || 0;
     
+    // ==========================================
+    // UTILITIES
+    // ==========================================
     const utilities = fields.Utilities || [];
     const rentIncludes = {
         rentIncludesTrash: utilities.includes('trash'),
@@ -34,37 +41,96 @@ function mapPropertyData(record) {
         rentIncludesCable: utilities.includes('cable'),
         rentIncludesInternet: utilities.includes('internet')
     };
+    
+    // ==========================================
+    // AMENITIES
+    // ==========================================
     const amenityMap = {
         'Fenced': 'Fenced Yard',
+        'Pool': 'Swimming Pool',
+        'Gym': 'Fitness Center',
+        'Clubhouse': 'Club House',
+        'Playground': 'Playground',
+        'Tennis': 'Tennis Court',
+        'Basketball': 'Basketball Court',
+        'Spa': 'Spa/Hot Tub',
+        'Sauna': 'Sauna',
+        'Business Center': 'Business Center',
+        'Conference Room': 'Conference Room',
+        'Elevator': 'Elevator',
+        'Handicap Access': 'Handicap Accessible',
+        'Pet Park': 'Pet Park',
+        'Car Wash': 'Car Wash Area',
+        'Bike Racks': 'Bike Racks',
+        'Storage': 'Storage Units',
+        'Security': 'Security System',
+        'Gated': 'Gated Community',
+        'Lake': 'Lake View',
+        'Golf': 'Golf Course',
+        'Tennis Court': 'Tennis Court',
+        'Basketball Court': 'Basketball Court',
+        'Volleyball': 'Volleyball Court',
+        'Soccer': 'Soccer Field',
+        'Walking Trails': 'Walking Trails'
     };
     
     const propertyAmenities = fields.Amenities 
         ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean) 
         : [];
     
+    // ==========================================
+    // FOTOS
+    // ==========================================
+    let photos = [];
+    if (fields['Upload photos '] && fields['Upload photos '].length > 0) {
+        photos = fields['Upload photos '].map((img, index) => ({
+            url: img.url,
+            order: index
+        }));
+    } else {
+        photos = [{ url: 'https://via.placeholder.com/800x600?text=No+Image', order: 0 }];
+    }
+    
+    // ==========================================
+    // CONSTRUIR EL PAYLOAD COMPLETO
+    // ==========================================
     const propertyData = {
+        // ==========================================
+        // INFORMACIÓN BÁSICA
+        // ==========================================
         address: fields.Address || '',
+        address2: fields.Unit || '',
         city: fields.City || '',
         state: fields.State || '',
         zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
         propertyType: fields['Rental Type'] || 'Apartment Unit',
         description: fields.Description || '',
-        photos: fields['Upload photos '] ? fields['Upload photos '].map((img, index) => ({
-            url: img.url,
-            order: index
-        })) : [{ url: 'https://via.placeholder.com/800x600?text=No+Image', order: 0 }],
+        descriptiveTitle: fields['Description Title'] || '',
+        
+        // ==========================================
+        // FOTOS
+        // ==========================================
+        photos: photos,
+        
+        // ==========================================
+        // PROPIETARIOS Y OCUPANTES
+        // ==========================================
         owners: [
             {
                 email: fields['Owner Email'] || 'owner@example.com'
             }
         ],
-        
         occupants: [
             {
-                phone: '13055550000',
-                email: 'none@example.com'
+                phone: fields['Phone'] || '13055550000',
+                email: fields['Email'] || 'none@example.com'
             }
         ],
+        assignedUserEmail: 'Cmelo@jcmrealtygroup.com',
+        
+        // ==========================================
+        // CARACTERÍSTICAS DE LA PROPIEDAD
+        // ==========================================
         propertyFeatures: {
             laundry: fields.Laundry || 'None',
             parkingType: fields.Parking || 'None',
@@ -80,62 +146,121 @@ function mapPropertyData(record) {
         propertyAmenities: propertyAmenities,
         
         // ==========================================
-        // CAMPOS DE ASIGNACIÓN Y FECHAS
-        // ==========================================
-        assignedUserEmail: 'Cmelo@jcmrealtygroup.com',
-        dateAvailable: fields['Date Available For Move-In'] || '',
-        descriptiveTitle: fields['Description Title'] || '',
-        
-        // ==========================================
         // CAMPOS NUMÉRICOS
         // ==========================================
         squareFootage: squareFootage,
         rentAmount: rentAmount,
         depositAmount: depositAmount,
+        bedrooms: parseInt(fields.Beds) || 0,
+        bathrooms: parseFloat(fields.Bathrooms) || 0,
+        
+        // ==========================================
+        // FECHAS Y TÉRMINOS
+        // ==========================================
+        dateAvailable: fields['Date Available For Move-In'] || '',
         minimumLeaseTerm: fields['Lease Term'] || 'One Year',
         
         // ==========================================
-        // CAMPOS ADICIONALES
+        // TOUR VIRTUAL
         // ==========================================
-        address2: fields.Unit || '',
-        bedrooms: parseInt(fields.Beds) || 0,
-        bathrooms: parseFloat(fields.Bathrooms) || 0,
         virtualTour: fields['Visual Tour'] || '',
         
-        selectAll: true,                   
-        EnableZillowInstantTouring: false,         
+        // ==========================================
+        // SYNDICATION - CORREGIDO
+        // ==========================================
+        syndication: {
+            selectAll: true,
+            EnableZillowInstantTouring: fields['EnableZillowInstantTouring'] || false
+        },
         
         // ==========================================
-        // RESTRICTIONS - CORREGIDO: EN LA RAÍZ
+        // RESTRICTIONS - CORREGIDO: ANIDADO CORRECTAMENTE
         // ==========================================
-        RequireMoveInDateWithinMaximum: fields['RestrictionMoveInDays'] || false,  
-        ConsiderPets: fields['AllowPets'] || false,
-        MaximumNumberOfPets: parseInt(fields['MaxPets']) || 0,
-        AllowCats: fields['AllowCats'] || false,
-        AllowSmallDogs: fields['AllowSmallDogs'] || false,
-        AllowLargeDogs: fields['AllowLargeDogs'] || false,
-        requireIncomeRatio: fields['RequireIncomeRatio'] || false
+        restrictions: {
+            RequireMoveInDateWithinMaximum: fields['RestrictionMoveInDays'] || false,
+            ConsiderPets: fields['AllowPets'] || false,
+            MaximumNumberOfPets: parseInt(fields['MaxPets']) || 0,
+            AllowCats: fields['AllowCats'] || false,
+            AllowSmallDogs: fields['AllowSmallDogs'] || false,
+            AllowLargeDogs: fields['AllowLargeDogs'] || false,
+            requireIncomeRatio: fields['RequireIncomeRatio'] || false
+        }
     };
     
-       
+    // ==========================================
+    // LOG PARA DEPURACIÓN
+    // ==========================================
+    console.log('📋 ====== PAYLOAD CORREGIDO ======');
+    console.log(`  address: ${propertyData.address}`);
+    console.log(`  address2: ${propertyData.address2}`);
+    console.log(`  city: ${propertyData.city}`);
+    console.log(`  state: ${propertyData.state}`);
+    console.log(`  zipCode: ${propertyData.zipCode}`);
+    console.log(`  propertyType: ${propertyData.propertyType}`);
+    console.log(`  description: ${propertyData.description.substring(0, 50)}...`);
+    console.log(`  descriptiveTitle: ${propertyData.descriptiveTitle}`);
+    console.log(`  assignedUserEmail: ${propertyData.assignedUserEmail}`);
+    console.log(`  dateAvailable: ${propertyData.dateAvailable}`);
+    console.log(`  squareFootage: ${propertyData.squareFootage}`);
+    console.log(`  rentAmount: $${propertyData.rentAmount}`);
+    console.log(`  depositAmount: $${propertyData.depositAmount}`);
+    console.log(`  bedrooms: ${propertyData.bedrooms}`);
+    console.log(`  bathrooms: ${propertyData.bathrooms}`);
+    console.log(`  minimumLeaseTerm: ${propertyData.minimumLeaseTerm}`);
+    console.log(`  virtualTour: ${propertyData.virtualTour || 'No disponible'}`);
+    console.log('  propertyFeatures:');
+    console.log(`    laundry: ${propertyData.propertyFeatures.laundry}`);
+    console.log(`    parkingType: ${propertyData.propertyFeatures.parkingType}`);
+    console.log(`    parkingCount: ${propertyData.propertyFeatures.parkingCount}`);
+    console.log(`    coolingSystem: ${propertyData.propertyFeatures.coolingSystem}`);
+    console.log(`    heatingSystem: ${propertyData.propertyFeatures.heatingSystem}`);
+    console.log(`    rentIncludesTrash: ${propertyData.propertyFeatures.rentIncludesTrash}`);
+    console.log(`    rentIncludesWater: ${propertyData.propertyFeatures.rentIncludesWater}`);
+    console.log(`    rentIncludesElectricity: ${propertyData.propertyFeatures.rentIncludesElectricity}`);
+    console.log(`    rentIncludesGas: ${propertyData.propertyFeatures.rentIncludesGas}`);
+    console.log(`    rentIncludesCable: ${propertyData.propertyFeatures.rentIncludesCable}`);
+    console.log(`    rentIncludesInternet: ${propertyData.propertyFeatures.rentIncludesInternet}`);
+    console.log(`  propertyAmenities: [${propertyData.propertyAmenities.join(', ') || 'Ninguna'}]`);
+    console.log('  syndication:');
+    console.log(`    selectAll: ${propertyData.syndication.selectAll}`);
+    console.log(`    zillowInstantTours: ${propertyData.syndication.EnableZillowInstantTouring}`);
+    console.log('  restrictions:');
+    console.log(`    RequireMoveInDateWithinMaximum: ${propertyData.restrictions.RequireMoveInDateWithinMaximum}`);
+    console.log(`    ConsiderPets: ${propertyData.restrictions.ConsiderPets}`);
+    console.log(`    MaximumNumberOfPets: ${propertyData.restrictions.MaximumNumberOfPets}`);
+    console.log(`    AllowCats: ${propertyData.restrictions.AllowCats}`);
+    console.log(`    AllowSmallDogs: ${propertyData.restrictions.AllowSmallDogs}`);
+    console.log(`    AllowLargeDogs: ${propertyData.restrictions.AllowLargeDogs}`);
+    console.log(`    requireIncomeRatio: ${propertyData.restrictions.requireIncomeRatio}`);
+    console.log('  photos:');
+    propertyData.photos.forEach((photo, index) => {
+        console.log(`    [${index}] ${photo.url}`);
+    });
+    console.log('===============================================');
+    
     return propertyData;
 }
 
 async function getPropertiesFromAirtable() {
     const records = [];
     
-    await base('Automatic apartments')
-        .select({
-            filterByFormula: `{Published} = FALSE()`,
-            maxRecords: 10
-        })
-        .eachPage((pageRecords, fetchNextPage) => {
-            records.push(...pageRecords);
-            fetchNextPage();
-        });
-    
-    console.log(`📊 Encontradas ${records.length} propiedades para publicar`);
-    return records;
+    try {
+        await base('Automatic apartments')
+            .select({
+                filterByFormula: `{Published} = FALSE()`,
+                maxRecords: 10
+            })
+            .eachPage((pageRecords, fetchNextPage) => {
+                records.push(...pageRecords);
+                fetchNextPage();
+            });
+        
+        console.log(`📊 Encontradas ${records.length} propiedades para publicar`);
+        return records;
+    } catch (error) {
+        console.error('❌ Error al obtener propiedades de Airtable:', error.message);
+        throw error;
+    }
 }
 
 async function createPropertyInTenantTurner(propertyData) {
@@ -149,19 +274,25 @@ async function createPropertyInTenantTurner(propertyData) {
                 'Authorization': `Basic ${encodedApiKey}`,
                 'Content-Type': 'application/json'
             },
-            family: 4,
             timeout: 30000
         });
         
         console.log(`✅ Propiedad creada exitosamente: ${propertyData.address}`);
         console.log(`📋 ID en Tenant Turner: ${response.data?.id || 'N/A'}`);
+        
+        if (response.data) {
+            console.log(`📋 URL: ${response.data?.url || 'N/A'}`);
+        }
+        
         return response.data;
     } catch (error) {
         if (error.response) {
-            console.error(`❌ Error ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+            console.error(`❌ Error ${error.response.status}: ${JSON.stringify(error.response.data, null, 2)}`);
             console.error('📋 Payload que causó el error:', JSON.stringify(propertyData, null, 2));
+        } else if (error.request) {
+            console.error(`❌ No se recibió respuesta del servidor: ${error.message}`);
         } else {
-            console.error(`❌ Error de red: ${error.message}`);
+            console.error(`❌ Error al configurar la petición: ${error.message}`);
         }
         throw error;
     }
@@ -181,8 +312,19 @@ async function markAsPublished(recordId) {
 async function main() {
     console.log('🚀 Iniciando sincronización con Tenant Turner...');
     console.log(`⏰ ${new Date().toLocaleString()}`);
+    console.log(`📌 API URL: ${TENANT_TURNER_API_URL}`);
     
     try {
+        // Verificar variables de entorno
+        const requiredEnv = ['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID', 'TENANT_TURNER_API_KEY'];
+        const missing = requiredEnv.filter(key => !process.env[key]);
+        
+        if (missing.length > 0) {
+            console.error(`❌ Faltan variables de entorno: ${missing.join(', ')}`);
+            process.exit(1);
+        }
+        
+        // Obtener propiedades de Airtable
         const properties = await getPropertiesFromAirtable();
         
         if (properties.length === 0) {
@@ -190,16 +332,29 @@ async function main() {
             return;
         }
         
+        // Procesar cada propiedad
+        let successCount = 0;
+        let failCount = 0;
+        
         for (const record of properties) {
             try {
+                console.log(`\n🔄 Procesando propiedad ${record.id}...`);
                 const propertyData = mapPropertyData(record);
                 await createPropertyInTenantTurner(propertyData);
                 await markAsPublished(record.id);
+                successCount++;
+                console.log(`✅ Propiedad ${record.id} procesada exitosamente`);
             } catch (error) {
-                console.error(`❌ Falló la propiedad ${record.id}`);
+                failCount++;
+                console.error(`❌ Falló la propiedad ${record.id}: ${error.message}`);
+                // Continuar con la siguiente propiedad
             }
         }
         
+        console.log('\n📊 RESUMEN:');
+        console.log(`✅ Exitosas: ${successCount}`);
+        console.log(`❌ Fallidas: ${failCount}`);
+        console.log(`📊 Total: ${properties.length}`);
         console.log('✅ Sincronización completada');
         
     } catch (error) {
@@ -208,12 +363,17 @@ async function main() {
     }
 }
 
-const requiredEnv = ['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID', 'TENANT_TURNER_API_KEY'];
-const missing = requiredEnv.filter(key => !process.env[key]);
-
-if (missing.length > 0) {
-    console.error(`❌ Faltan variables de entorno: ${missing.join(', ')}`);
-    process.exit(1);
+// ==========================================
+// EJECUCIÓN DEL PROGRAMA
+// ==========================================
+if (require.main === module) {
+    main();
 }
 
-main();
+module.exports = {
+    mapPropertyData,
+    getPropertiesFromAirtable,
+    createPropertyInTenantTurner,
+    markAsPublished,
+    main
+};
