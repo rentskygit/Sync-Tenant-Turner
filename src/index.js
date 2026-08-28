@@ -79,6 +79,7 @@ function mapPropertyData(record) {
         photos = [{ url: 'https://via.placeholder.com/800x600?text=No+Image', order: 0 }];
     }
     const propertyData = {
+        PropertyManager: 'Vivian Serrano',
         address: fields.Address || '',
         address2: fields.Unit || '',
         city: fields.City || '',
