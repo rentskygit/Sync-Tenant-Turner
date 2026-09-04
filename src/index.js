@@ -84,7 +84,7 @@ function mapPropertyData(record) {
         address2: fields.Unit || '',
         city: fields.City || '',
         state: fields.State || '',
-        zipCode: fields.Zip ? String(fields.Zip).padStart(5, '0') : '00000',
+        zipCode: fields.Zip_Code ? String(fields.Zip_Code).padStart(5, '0') : '00000',
         propertyType: fields['Rental Type'] || 'Apartment Unit',
         description: fields.Description || '',
         descriptiveTitle: fields['Description Title'] || '',
