@@ -117,7 +117,7 @@ function mapPropertyData(record) {
         bathrooms: parseFloat(fields.Bathrooms) || 0,
         dateAvailable: fields['Date Available For Move-In'] || '',
         minimumLeaseTerm: fields['Lease Term'] || 'One Year',
-        virtualTour: fields['Visual Tour'] || '',
+        virtualTour: fields['Visual tour link'] || '',
         syndication: {
             selectAll: true,
             EnableZillowInstantTouring: fields['EnableZillowInstantTouring'] || false
