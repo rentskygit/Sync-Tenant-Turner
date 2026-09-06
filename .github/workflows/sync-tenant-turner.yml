@@ -8,7 +8,10 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+      pages: write
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,6 +27,7 @@ jobs:
           npm ci
       
       - name: Run sync script
+        id: sync
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
@@ -55,6 +59,5 @@ jobs:
         run: |
           echo "📄 Contenido del feed Zillow:"
           echo "--- INICIO DEL XML ---"
-          cat src/zillow_feed.xml
+          cat src/zillow_feed.xml || echo "⚠️ No se encontró el archivo"
           echo "--- FIN DEL XML ---"
-          echo "📊 Total de propiedades: $(grep -c '<listing' src/zillow_feed.xml || echo '0')"
