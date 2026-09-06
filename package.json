@@ -5,8 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node src/test-connection.js",
-    "generate-feed": "node src/generate-zillow-feed.js"
+    "test": "node src/test-connection.js"
   },
   "dependencies": {
     "airtable": "^0.12.0",
