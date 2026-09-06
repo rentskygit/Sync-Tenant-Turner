@@ -1,14 +1,16 @@
 {
   "name": "tenant-turner-sync",
   "version": "1.0.0",
-  "description": "Sincroniza propiedades desde Airtable a Tenant Turner",
+  "description": "Sincroniza propiedades desde Airtable a Tenant Turner y genera feed para Zillow",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "node src/test-connection.js"
+    "test": "node src/test-connection.js",
+    "generate-feed": "node src/generate-zillow-feed.js"
   },
   "dependencies": {
     "airtable": "^0.12.0",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "fast-xml-parser": "^4.3.2"
   }
 }
