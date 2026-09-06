@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
       
       - name: Install dependencies
         run: |
@@ -28,5 +28,26 @@ jobs:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
           TENANT_TURNER_API_KEY: ${{ secrets.TENANT_TURNER_API_KEY }}
+          ENABLE_ZILLOW_FEED: ${{ secrets.ENABLE_ZILLOW_FEED || 'true' }}
+          ZILLOW_FEED_URL: ${{ secrets.ZILLOW_FEED_URL }}
           NODE_OPTIONS: '--dns-result-order=ipv4first'
         run: node src/index.js
+      
+      # NUEVO: Subir el feed de Zillow a GitHub Pages
+      - name: Upload Zillow feed to GitHub Pages
+        if: env.ENABLE_ZILLOW_FEED == 'true'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          keep_files: false
+          destination_dir: feeds
+          only_workflow_files: true
+      
+      # NUEVO: Mostrar la URL del feed en los logs
+      - name: Show feed URL
+        if: env.ENABLE_ZILLOW_FEED == 'true'
+        run: |
+          echo "📋 Feed URL for Zillow:"
+          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/feeds/zillow_feed.xml"
