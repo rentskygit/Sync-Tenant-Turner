@@ -33,21 +33,28 @@ jobs:
           NODE_OPTIONS: '--dns-result-order=ipv4first'
         run: node src/index.js
       
-      # NUEVO: Subir el feed de Zillow a GitHub Pages
       - name: Upload Zillow feed to GitHub Pages
         if: env.ENABLE_ZILLOW_FEED == 'true'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
+          publish_dir: ./src
           publish_branch: gh-pages
           keep_files: false
           destination_dir: feeds
           only_workflow_files: true
       
-      # NUEVO: Mostrar la URL del feed en los logs
       - name: Show feed URL
         if: env.ENABLE_ZILLOW_FEED == 'true'
         run: |
           echo "📋 Feed URL for Zillow:"
           echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/feeds/zillow_feed.xml"
+      
+      - name: Show feed content
+        if: env.ENABLE_ZILLOW_FEED == 'true'
+        run: |
+          echo "📄 Contenido del feed Zillow:"
+          echo "--- INICIO DEL XML ---"
+          cat src/zillow_feed.xml
+          echo "--- FIN DEL XML ---"
+          echo "📊 Total de propiedades: $(grep -c '<listing' src/zillow_feed.xml || echo '0')"
