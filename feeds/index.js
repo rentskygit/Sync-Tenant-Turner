@@ -353,7 +353,7 @@ function generateZillowFeedXML(records) {
         const listings = records.map(record => mapToZillowFormat(record));
         
         const feed = {
-            '?xml version="1.0" encoding="UTF-8"?' : null,
+            '?xml': null,
             listings: {
                 '@_version': '1.0',
                 '@_xmlns': 'http://www.zillow.com/instant/feed/1.0',
