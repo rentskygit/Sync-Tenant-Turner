@@ -12,6 +12,14 @@ jobs:
       contents: write
       pages: write
       
+    env:
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+      TENANT_TURNER_API_KEY: ${{ secrets.TENANT_TURNER_API_KEY }}
+      ENABLE_ZILLOW_FEED: ${{ secrets.ENABLE_ZILLOW_FEED || 'true' }}
+      ZILLOW_FEED_URL: ${{ secrets.ZILLOW_FEED_URL }}
+      NODE_OPTIONS: '--dns-result-order=ipv4first'
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,16 +35,9 @@ jobs:
           npm ci
       
       - name: Run sync script
-        id: sync
-        env:
-          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
-          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
-          TENANT_TURNER_API_KEY: ${{ secrets.TENANT_TURNER_API_KEY }}
-          ENABLE_ZILLOW_FEED: ${{ secrets.ENABLE_ZILLOW_FEED || 'true' }}
-          ZILLOW_FEED_URL: ${{ secrets.ZILLOW_FEED_URL }}
-          NODE_OPTIONS: '--dns-result-order=ipv4first'
         run: node src/index.js
       
+      # SUBIR FEED A GITHUB PAGES
       - name: Upload Zillow feed to GitHub Pages
         if: env.ENABLE_ZILLOW_FEED == 'true'
         uses: peaceiris/actions-gh-pages@v3
@@ -54,10 +55,15 @@ jobs:
           echo "📋 Feed URL for Zillow:"
           echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/feeds/zillow_feed.xml"
       
+
       - name: Show feed content
         if: env.ENABLE_ZILLOW_FEED == 'true'
         run: |
           echo "📄 Contenido del feed Zillow:"
           echo "--- INICIO DEL XML ---"
-          cat src/zillow_feed.xml || echo "⚠️ No se encontró el archivo"
+          if [ -f "src/zillow_feed.xml" ]; then
+            cat src/zillow_feed.xml
+          else
+            echo "⚠️ No se encontró src/zillow_feed.xml"
+          fi
           echo "--- FIN DEL XML ---"
