@@ -2,7 +2,7 @@ const Airtable = require('airtable');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { XMLBuilder } = require('fast-xml-parser'); 
+const { XMLBuilder } = require('fast-xml-parser');
 
 const airtable = new Airtable({
     apiKey: process.env.AIRTABLE_API_KEY
@@ -12,28 +12,29 @@ const base = airtable.base(process.env.AIRTABLE_BASE_ID);
 const TENANT_TURNER_API_KEY = process.env.TENANT_TURNER_API_KEY;
 const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
-
 const ZILLOW_ENABLED = process.env.ENABLE_ZILLOW_FEED === 'true' || false;
-const ZILLOW_FEED_URL = process.env.ZILLOW_FEED_URL || '';
 
+// ══════════════════════════════════════════════════════════════════
+// MAPEO PARA TENANT TURNER
+// ══════════════════════════════════════════════════════════════════
 
 function mapPropertyData(record) {
     const fields = record.fields;
-    
+
     let squareFootage = parseInt(fields['Square Fee']);
     if (squareFootage < 100) squareFootage = 100;
     if (squareFootage > 20000) squareFootage = 20000;
-    
+
     let rentAmount = parseFloat(fields.Price);
     rentAmount = Math.round(rentAmount * 100) / 100;
     if (rentAmount < 100) rentAmount = 100;
     if (rentAmount > 100000) rentAmount = 100000;
-    
+
     let depositAmount = parseFloat(fields.Deposit) || 0;
     depositAmount = Math.round(depositAmount * 100) / 100;
-    
+
     let parkingCount = parseInt(fields.Spot) || 0;
-    
+
     const utilities = fields.Utilities || [];
     const rentIncludes = {
         rentIncludesTrash: utilities.includes('trash'),
@@ -43,7 +44,7 @@ function mapPropertyData(record) {
         rentIncludesCable: utilities.includes('cable'),
         rentIncludesInternet: utilities.includes('internet')
     };
-    
+
     const amenityMap = {
         'Fenced': 'Fenced Yard',
         'Pool': 'Swimming Pool',
@@ -72,11 +73,11 @@ function mapPropertyData(record) {
         'Soccer': 'Soccer Field',
         'Walking Trails': 'Walking Trails'
     };
-    
-    const propertyAmenities = fields.Amenities 
-        ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean) 
+
+    const propertyAmenities = fields.Amenities
+        ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean)
         : [];
-    
+
     let photos = [];
     if (fields['Upload photos '] && fields['Upload photos '].length > 0) {
         photos = fields['Upload photos '].map((img, index) => ({
@@ -86,7 +87,7 @@ function mapPropertyData(record) {
     } else {
         photos = [{ url: 'https://via.placeholder.com/800x600?text=No+Image', order: 0 }];
     }
-    
+
     const propertyData = {
         PropertyManager: 'Vivian Serrano',
         address: fields.Address || '',
@@ -141,13 +142,13 @@ function mapPropertyData(record) {
             requireIncomeRatio: fields['RequireIncomeRatio'] || false
         }
     };
-    
+
     return propertyData;
 }
 
 async function getPropertiesFromAirtable() {
     const records = [];
-    
+
     try {
         await base('Automatic apartments')
             .select({
@@ -158,7 +159,7 @@ async function getPropertiesFromAirtable() {
                 records.push(...pageRecords);
                 fetchNextPage();
             });
-        
+
         console.log(`📊 Encontradas ${records.length} propiedades para publicar`);
         return records;
     } catch (error) {
@@ -169,9 +170,9 @@ async function getPropertiesFromAirtable() {
 
 async function createPropertyInTenantTurner(propertyData) {
     const encodedApiKey = Buffer.from(TENANT_TURNER_API_KEY).toString('base64');
-    
+
     console.log(`📤 Enviando a Tenant Turner: ${propertyData.address}`);
-    
+
     try {
         const response = await axios.post(TENANT_TURNER_API_URL, propertyData, {
             headers: {
@@ -180,14 +181,14 @@ async function createPropertyInTenantTurner(propertyData) {
             },
             timeout: 30000
         });
-        
+
         console.log(`✅ Propiedad creada exitosamente: ${propertyData.address}`);
         console.log(`📋 ID en Tenant Turner: ${response.data?.id || 'N/A'}`);
-        
+
         if (response.data) {
             console.log(`📋 URL: ${response.data?.url || 'N/A'}`);
         }
-        
+
         return response.data;
     } catch (error) {
         if (error.response) {
@@ -213,9 +214,13 @@ async function markAsPublished(recordId) {
     }
 }
 
+// ══════════════════════════════════════════════════════════════════
+// MAPEO PARA ZILLOW
+// ══════════════════════════════════════════════════════════════════
+
 function mapToZillowFormat(record) {
     const fields = record.fields;
-    
+
     const propertyTypeMap = {
         'Apartment Unit': 'apartment',
         'Condominium': 'condo',
@@ -259,7 +264,7 @@ function mapToZillowFormat(record) {
         'Walking Trails': 'walking_trails'
     };
 
-    const amenities = fields.Amenities 
+    const amenities = fields.Amenities
         ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean)
         : [];
 
@@ -348,12 +353,16 @@ function mapToZillowFormat(record) {
     };
 }
 
+// ══════════════════════════════════════════════════════════════════
+// GENERACIÓN Y GUARDADO DEL XML
+// ══════════════════════════════════════════════════════════════════
+
 function generateZillowFeedXML(records) {
     try {
         const listings = records.map(record => mapToZillowFormat(record));
-        
+
+        // NO usar '?xml': null — genera "<?xml?>" inválido
         const feed = {
-            '?xml': null,
             listings: {
                 '@_version': '1.0',
                 '@_xmlns': 'http://www.zillow.com/instant/feed/1.0',
@@ -366,10 +375,17 @@ function generateZillowFeedXML(records) {
             format: true,
             attributeNamePrefix: '@_',
             suppressEmptyNode: true,
-            suppressBooleanAttributes: false
+            suppressBooleanAttributes: false,
+            indentBy: '  '
         });
 
-        return builder.build(feed);
+        const body = builder.build(feed);
+
+        // Declaración XML correcta + salto de línea
+        // Sin BOM, sin espacios antes de "<?xml"
+        const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + body;
+
+        return xml;
     } catch (error) {
         console.error('❌ Error generando XML de Zillow:', error.message);
         throw error;
@@ -379,14 +395,18 @@ function generateZillowFeedXML(records) {
 function saveZillowFeedXML(xml, filename = 'zillow_feed.xml') {
     try {
         const outputPath = path.join(__dirname, filename);
-        fs.writeFileSync(outputPath, xml);
+        // Escritura UTF-8 sin BOM (por defecto en Node)
+        fs.writeFileSync(outputPath, xml, { encoding: 'utf8' });
         console.log(`✅ Feed Zillow guardado en: ${outputPath}`);
+        console.log(`📏 Tamaño: ${Buffer.byteLength(xml, 'utf8')} bytes`);
+        console.log(`🔤 Primeros 60 caracteres: ${JSON.stringify(xml.slice(0, 60))}`);
         return outputPath;
     } catch (error) {
         console.error('❌ Error guardando feed Zillow:', error.message);
         throw error;
     }
 }
+
 async function uploadZillowFeed(xml) {
     if (process.env.AWS_ACCESS_KEY_ID) {
         try {
@@ -423,24 +443,22 @@ async function processZillowFeed(records) {
     }
 
     console.log('📤 Generando feed para Zillow...');
-    
+
     try {
         // Generar XML
         const xml = generateZillowFeedXML(records);
-        
+
         // Guardar archivo
         const filePath = saveZillowFeedXML(xml);
-        
+
         // Intentar subir a S3 si está configurado
         await uploadZillowFeed(xml);
-        
+
         console.log(`✅ Feed Zillow generado exitosamente con ${records.length} propiedades`);
-        console.log(`📋 URL sugerida para Zillow: ${ZILLOW_FEED_URL || 'https://tu-dominio.github.io/feeds/zillow_feed.xml'}`);
-        
+
         return {
             success: records.length,
-            filePath: filePath,
-            feedUrl: ZILLOW_FEED_URL || filePath
+            filePath: filePath
         };
     } catch (error) {
         console.error('❌ Error procesando feed de Zillow:', error.message);
@@ -448,36 +466,40 @@ async function processZillowFeed(records) {
     }
 }
 
+// ══════════════════════════════════════════════════════════════════
+// MAIN
+// ══════════════════════════════════════════════════════════════════
 
 async function main() {
     console.log('🚀 Iniciando sincronización con Tenant Turner...');
     console.log(`⏰ ${new Date().toLocaleString()}`);
     console.log(`📌 API URL: ${TENANT_TURNER_API_URL}`);
-    
+
     try {
         const requiredEnv = ['AIRTABLE_API_KEY', 'AIRTABLE_BASE_ID', 'TENANT_TURNER_API_KEY'];
         const missing = requiredEnv.filter(key => !process.env[key]);
-        
+
         if (missing.length > 0) {
             console.error(`❌ Faltan variables de entorno: ${missing.join(', ')}`);
             process.exit(1);
         }
+
         const properties = await getPropertiesFromAirtable();
-        
+
         if (properties.length === 0) {
             console.log('ℹ️ No hay propiedades pendientes de publicación');
-            
+
             if (ZILLOW_ENABLED) {
                 console.log('📤 Generando feed vacío para Zillow (sin propiedades)');
                 await processZillowFeed([]);
             }
             return;
         }
+
         console.log('\n🔄 --- PROCESANDO TENANT TURNER ---');
         let successCount = 0;
         let failCount = 0;
-        const processedIds = [];
-        
+
         for (const record of properties) {
             try {
                 console.log(`\n🔄 Procesando propiedad ${record.id} para Tenant Turner...`);
@@ -485,38 +507,34 @@ async function main() {
                 await createPropertyInTenantTurner(propertyData);
                 await markAsPublished(record.id);
                 successCount++;
-                processedIds.push(record.id);
                 console.log(`✅ Propiedad ${record.id} procesada en Tenant Turner exitosamente`);
             } catch (error) {
                 failCount++;
                 console.error(`❌ Falló la propiedad ${record.id} en Tenant Turner: ${error.message}`);
             }
         }
-        
+
         console.log('\n📊 RESUMEN TENANT TURNER:');
         console.log(`✅ Exitosas: ${successCount}`);
         console.log(`❌ Fallidas: ${failCount}`);
         console.log(`📊 Total: ${properties.length}`);
-        
+
         if (ZILLOW_ENABLED) {
             console.log('\n🔄 --- PROCESANDO ZILLOW FEED ---');
-            
+
             const zillowResult = await processZillowFeed(properties);
-            
+
             console.log('\n📊 RESUMEN ZILLOW FEED:');
             if (zillowResult && zillowResult.success) {
                 console.log(`✅ Propiedades incluidas en feed: ${zillowResult.success}`);
                 console.log(`📋 Archivo generado: ${zillowResult.filePath}`);
-                if (zillowResult.feedUrl) {
-                    console.log(`🔗 URL del feed: ${zillowResult.feedUrl}`);
-                }
             } else {
                 console.log('❌ Error generando feed Zillow');
             }
         }
-        
+
         console.log('\n✅ Sincronización completada');
-        
+
     } catch (error) {
         console.error('❌ Error en el proceso principal:', error.message);
         process.exit(1);
@@ -533,7 +551,7 @@ module.exports = {
     createPropertyInTenantTurner,
     markAsPublished,
     main,
-    
+
     mapToZillowFormat,
     generateZillowFeedXML,
     saveZillowFeedXML,
