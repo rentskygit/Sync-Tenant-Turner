@@ -14,9 +14,6 @@ const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 const ZILLOW_ENABLED = process.env.ENABLE_ZILLOW_FEED === 'true' || false;
 
-// ══════════════════════════════════════════════════════════════════
-// MAPEO PARA TENANT TURNER
-// ══════════════════════════════════════════════════════════════════
 
 function mapPropertyData(record) {
     const fields = record.fields;
@@ -214,9 +211,6 @@ async function markAsPublished(recordId) {
     }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// MAPEO PARA ZILLOW
-// ══════════════════════════════════════════════════════════════════
 
 function mapToZillowFormat(record) {
     const fields = record.fields;
