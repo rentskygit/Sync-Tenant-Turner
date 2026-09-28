@@ -11,59 +11,72 @@ jobs:
     permissions:
       contents: write
       pages: write
-      
+      id-token: write
+
     env:
       AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
       AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
       TENANT_TURNER_API_KEY: ${{ secrets.TENANT_TURNER_API_KEY }}
       ENABLE_ZILLOW_FEED: ${{ secrets.ENABLE_ZILLOW_FEED || 'true' }}
-      ZILLOW_FEED_URL: ${{ secrets.ZILLOW_FEED_URL }}
       NODE_OPTIONS: '--dns-result-order=ipv4first'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
-        run: |
-          npm install --package-lock-only
-          npm ci
-      
+        run: npm ci
+
       - name: Run sync script
         run: node src/index.js
-      
-      # SUBIR FEED A GITHUB PAGES
-      - name: Upload Zillow feed to GitHub Pages
+
+      - name: Prepare feed for Pages
+        if: env.ENABLE_ZILLOW_FEED == 'true'
+        run: |
+          mkdir -p public
+          if [ -f "src/zillow_feed.xml" ]; then
+            cp src/zillow_feed.xml public/zillow_feed.xml
+            echo "✅ XML copiado ($(wc -c < public/zillow_feed.xml) bytes)"
+          else
+            printf '<?xml version="1.0" encoding="UTF-8"?>\n<listings version="1.0" xmlns="http://www.zillow.com/instant/feed/1.0"></listings>' > public/zillow_feed.xml
+            echo "⚠️ Se generó XML vacío (no se encontró src/zillow_feed.xml)"
+          fi
+
+      - name: Verify XML header
+        if: env.ENABLE_ZILLOW_FEED == 'true'
+        run: |
+          echo "🔍 Primeros bytes (hex):"
+          head -c 32 public/zillow_feed.xml | xxd || true
+          echo ""
+          echo "🔍 Primera línea:"
+          head -n 1 public/zillow_feed.xml
+
+      - name: Deploy feed to GitHub Pages
         if: env.ENABLE_ZILLOW_FEED == 'true'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./src
+          publish_dir: ./public
           publish_branch: gh-pages
+          force_orphan: true
           keep_files: false
-          destination_dir: feeds
-          only_workflow_files: true
-      
-      - name: Show feed URL
-        if: env.ENABLE_ZILLOW_FEED == 'true'
-        run: |
-          echo "📋 Feed URL for Zillow:"
-          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/feeds/zillow_feed.xml"
-      
 
-      - name: Show feed content
+      - name: Show public feed URL
         if: env.ENABLE_ZILLOW_FEED == 'true'
         run: |
-          echo "📄 Contenido del feed Zillow:"
-          echo "--- INICIO DEL XML ---"
-          if [ -f "src/zillow_feed.xml" ]; then
-            cat src/zillow_feed.xml
-          else
-            echo "⚠️ No se encontró src/zillow_feed.xml"
-          fi
-          echo "--- FIN DEL XML ---"
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          echo "🔗 URL pública del feed:"
+          echo "https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO_NAME}/zillow_feed.xml"
+
+      - name: Upload feed as artifact
+        if: env.ENABLE_ZILLOW_FEED == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: zillow-feed
+          path: public/zillow_feed.xml
+          retention-days: 30
