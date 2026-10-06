@@ -347,15 +347,12 @@ function mapToZillowFormat(record) {
     };
 }
 
-// ══════════════════════════════════════════════════════════════════
 // GENERACIÓN Y GUARDADO DEL XML
-// ══════════════════════════════════════════════════════════════════
 
 function generateZillowFeedXML(records) {
     try {
         const listings = records.map(record => mapToZillowFormat(record));
 
-        // NO usar '?xml': null — genera "<?xml?>" inválido
         const feed = {
             listings: {
                 '@_version': '1.0',
@@ -375,8 +372,6 @@ function generateZillowFeedXML(records) {
 
         const body = builder.build(feed);
 
-        // Declaración XML correcta + salto de línea
-        // Sin BOM, sin espacios antes de "<?xml"
         const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + body;
 
         return xml;
@@ -389,7 +384,6 @@ function generateZillowFeedXML(records) {
 function saveZillowFeedXML(xml, filename = 'zillow_feed.xml') {
     try {
         const outputPath = path.join(__dirname, filename);
-        // Escritura UTF-8 sin BOM (por defecto en Node)
         fs.writeFileSync(outputPath, xml, { encoding: 'utf8' });
         console.log(`✅ Feed Zillow guardado en: ${outputPath}`);
         console.log(`📏 Tamaño: ${Buffer.byteLength(xml, 'utf8')} bytes`);
@@ -439,13 +433,10 @@ async function processZillowFeed(records) {
     console.log('📤 Generando feed para Zillow...');
 
     try {
-        // Generar XML
         const xml = generateZillowFeedXML(records);
 
-        // Guardar archivo
         const filePath = saveZillowFeedXML(xml);
 
-        // Intentar subir a S3 si está configurado
         await uploadZillowFeed(xml);
 
         console.log(`✅ Feed Zillow generado exitosamente con ${records.length} propiedades`);
@@ -460,9 +451,6 @@ async function processZillowFeed(records) {
     }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// MAIN
-// ══════════════════════════════════════════════════════════════════
 
 async function main() {
     console.log('🚀 Iniciando sincronización con Tenant Turner...');
