@@ -43,7 +43,7 @@ jobs:
             cp src/zillow_feed.xml public/zillow_feed.xml
             echo "✅ XML copiado ($(wc -c < public/zillow_feed.xml) bytes)"
           else
-            printf '<?xml version="1.0" encoding="UTF-8"?>\n<listings version="1.0" xmlns="http://www.zillow.com/instant/feed/1.0"></listings>' > public/zillow_feed.xml
+            printf '<?xml version="1.0" encoding="UTF-8"?>\n<rentals></rentals>' > public/zillow_feed.xml
             echo "⚠️ Se generó XML vacío (no se encontró src/zillow_feed.xml)"
           fi
 
