@@ -14,7 +14,6 @@ const TENANT_TURNER_API_URL = 'https://api.tenantturner.com/v1/properties';
 
 const ZILLOW_ENABLED = process.env.ENABLE_ZILLOW_FEED === 'true' || false;
 
-
 function mapPropertyData(record) {
     const fields = record.fields;
 
@@ -211,17 +210,35 @@ async function markAsPublished(recordId) {
     }
 }
 
+function removeEmpty(obj) {
+    if (Array.isArray(obj)) {
+        return obj.map(removeEmpty).filter(v => v !== undefined && v !== null && v !== '');
+    }
+    if (obj !== null && typeof obj === 'object') {
+        const cleaned = {};
+        for (const [k, v] of Object.entries(obj)) {
+            const cv = removeEmpty(v);
+            if (cv !== undefined && cv !== null && cv !== '') {
+                cleaned[k] = cv;
+            }
+        }
+        return cleaned;
+    }
+    return obj;
+}
 
-function mapToZillowFormat(record) {
+function mapToHotPadsFormat(record) {
     const fields = record.fields;
 
     const propertyTypeMap = {
         'Apartment Unit': 'apartment',
         'Condominium': 'condo',
-        'Townhouse': 'townhouse',
+        'Townhouse': 'townhome',
         'Single Family': 'single_family',
-        'Duplex': 'duplex',
-        'Studio': 'studio'
+        'Duplex': 'multi_family',
+        'Studio': 'apartment',
+        'Multi-Family': 'multi_family',
+        'Multifamily': 'multi_family'
     };
 
     const utilities = fields.Utilities || [];
@@ -255,19 +272,26 @@ function mapToZillowFormat(record) {
         'Gated': 'gated_community',
         'Lake': 'lake_view',
         'Golf': 'golf_course',
-        'Walking Trails': 'walking_trails'
+        'Walking Trails': 'walking_trails',
+        'Hardwood Flooring': 'hardwood_floors',
+        'Refrigerator': 'refrigerator',
+        'Range Oven': 'range_oven',
+        'Dishwasher': 'dishwasher',
+        'Air Conditioning': 'air_conditioning',
+        'Balcony': 'balcony',
+        'Patio': 'patio',
+        'Fireplace': 'fireplace',
+        'Washer Dryer': 'washer_dryer_hookup',
+        'In Unit Laundry': 'washer_dryer_in_unit'
     };
 
     const amenities = fields.Amenities
-        ? fields.Amenities.map(a => amenityMap[a] || a).filter(Boolean)
+        ? fields.Amenities.map(a => amenityMap[a] || a.toString().toLowerCase().replace(/\s+/g, '_'))
         : [];
 
-    const photos = (fields['Upload photos '] || []).map(img => ({
-        photo: img.url
-    }));
-
-    if (photos.length === 0) {
-        photos.push({ photo: 'https://via.placeholder.com/800x600?text=No+Image' });
+    const photoUrls = (fields['Upload photos '] || []).map(img => img.url);
+    if (photoUrls.length === 0) {
+        photoUrls.push('https://via.placeholder.com/800x600?text=No+Image');
     }
 
     const laundryMap = {
@@ -290,84 +314,91 @@ function mapToZillowFormat(record) {
         'Month to Month': 'month_to_month'
     };
 
-    return {
-        listing: {
-            '@_id': record.id,
-            '@_status': 'active',
-            address: {
-                street: fields.Address || '',
-                unit: fields.Unit || '',
-                city: fields.City || '',
-                state: fields.State || '',
-                zipcode: fields.Zip_Code ? String(fields.Zip_Code).padStart(5, '0') : '00000'
-            },
-            property: {
-                type: propertyTypeMap[fields['Rental Type']] || 'apartment',
-                bedrooms: parseInt(fields.Beds) || 0,
-                bathrooms: parseFloat(fields.Bathrooms) || 0,
-                square_feet: parseInt(fields['Square Fee']) || 0
-            },
-            rental: {
-                price: Math.round(parseFloat(fields.Price) * 100) / 100 || 0,
-                deposit: parseFloat(fields.Deposit) || 0,
-                available_date: fields['Date Available For Move-In'] || '',
-                lease_term: leaseTermMap[fields['Lease Term']] || fields['Lease Term'] || '12',
-                utilities: includedUtilities.length > 0 ? includedUtilities : undefined,
-                laundry: laundryMap[fields.Laundry] || 'none',
-                parking: {
-                    type: parkingMap[fields.Parking] || 'none',
-                    spots: parseInt(fields.Spot) || 0
-                }
-            },
-            description: {
-                title: fields['Description Title'] || '',
-                body: fields.Description || ''
-            },
-            amenities: amenities.length > 0 ? amenities : undefined,
-            photos: photos,
-            contact: {
-                name: 'JCM Realty Group',
-                phone: fields.Phone || '13055550000',
-                email: fields.Email || 'info@jcmrealtygroup.com'
-            },
-            agent: {
-                name: 'Vivian Serrano',
-                email: 'Cmelo@jcmrealtygroup.com',
-                phone: fields.Phone || '13055550000'
-            },
-            features: {
-                pets_allowed: fields.AllowPets || false,
-                cats_allowed: fields.AllowCats || false,
-                small_dogs_allowed: fields.AllowSmallDogs || false,
-                large_dogs_allowed: fields.AllowLargeDogs || false
-            },
-            url: fields['Visual tour link'] || '',
-            virtual_tour: fields['Visual tour link'] || ''
+    const address = fields.Address || '';
+    const unit = fields.Unit || '';
+    const city = fields.City || '';
+    const state = fields.State || '';
+    const zip = fields.Zip_Code ? String(fields.Zip_Code).padStart(5, '0') : '00000';
+
+    const buildingName = fields['Building Name']
+        || fields['Property Name']
+        || `${address}, ${city} ${state}`;
+
+    const totalUnits = parseInt(fields['Total Units']) || 0;
+
+    const rental = {
+        id: record.id,
+        listing_id: record.id,
+        status: 'active',
+        property_type: propertyTypeMap[fields['Rental Type']] || 'apartment',
+        building_name: buildingName,
+        total_units: totalUnits > 0 ? totalUnits : undefined,
+        address: address,
+        unit: unit,
+        city: city,
+        state: state,
+        zip: zip,
+        country: 'US',
+        bedrooms: parseInt(fields.Beds) || 0,
+        bathrooms: parseFloat(fields.Bathrooms) || 0,
+        square_feet: parseInt(fields['Square Fee']) || 0,
+        floor: fields.Floor || undefined,
+        price: Math.round(parseFloat(fields.Price) * 100) / 100 || 0,
+        deposit: parseFloat(fields.Deposit) || 0,
+        application_fee: parseFloat(fields['Application Fee']) || undefined,
+        available_date: fields['Date Available For Move-In'] || '',
+        lease_term: leaseTermMap[fields['Lease Term']] || fields['Lease Term'] || '12',
+        title: fields['Description Title'] || '',
+        description: fields.Description || '',
+        photos: {
+            photo: photoUrls
+        },
+        amenities: amenities.length > 0 ? { amenity: amenities } : undefined,
+        utilities_included: includedUtilities.length > 0
+            ? { utility: includedUtilities }
+            : undefined,
+        laundry: laundryMap[fields.Laundry] || 'none',
+        parking: {
+            type: parkingMap[fields.Parking] || 'none',
+            spots: parseInt(fields.Spot) || 0
+        },
+        pets_allowed: fields.AllowPets || false,
+        cats_allowed: fields.AllowCats || false,
+        dogs_allowed: fields.AllowSmallDogs || fields.AllowLargeDogs || false,
+        max_pets: parseInt(fields.MaxPets) || undefined,
+        virtual_tour: fields['Visual tour link'] || undefined,
+        url: fields['Visual tour link'] || undefined,
+        contact: {
+            name: 'JCM Realty Group',
+            email: fields['Owner Email'] || 'info@jcmrealtygroup.com',
+            phone: fields.Phone || '13055550000'
+        },
+        agent: {
+            name: 'Vivian Serrano',
+            email: 'Cmelo@jcmrealtygroup.com',
+            phone: fields.Phone || '13055550000'
         }
     };
-}
 
-// GENERACIÓN Y GUARDADO DEL XML
+    return { rental: removeEmpty(rental) };
+}
 
 function generateZillowFeedXML(records) {
     try {
-        const listings = records.map(record => mapToZillowFormat(record));
+        const rentals = records.map(record => mapToHotPadsFormat(record));
 
         const feed = {
-            listings: {
-                '@_version': '1.0',
-                '@_xmlns': 'http://www.zillow.com/instant/feed/1.0',
-                listing: listings.map(l => l.listing)
+            rentals: {
+                rental: rentals.map(r => r.rental)
             }
         };
 
         const builder = new XMLBuilder({
             ignoreAttributes: false,
             format: true,
-            attributeNamePrefix: '@_',
+            indentBy: '  ',
             suppressEmptyNode: true,
-            suppressBooleanAttributes: false,
-            indentBy: '  '
+            suppressBooleanAttributes: false
         });
 
         const body = builder.build(feed);
@@ -376,7 +407,7 @@ function generateZillowFeedXML(records) {
 
         return xml;
     } catch (error) {
-        console.error('❌ Error generando XML de Zillow:', error.message);
+        console.error('❌ Error generando XML HotPads:', error.message);
         throw error;
     }
 }
@@ -434,9 +465,7 @@ async function processZillowFeed(records) {
 
     try {
         const xml = generateZillowFeedXML(records);
-
         const filePath = saveZillowFeedXML(xml);
-
         await uploadZillowFeed(xml);
 
         console.log(`✅ Feed Zillow generado exitosamente con ${records.length} propiedades`);
@@ -450,7 +479,6 @@ async function processZillowFeed(records) {
         return { success: 0, failed: records.length, error: error.message };
     }
 }
-
 
 async function main() {
     console.log('🚀 Iniciando sincronización con Tenant Turner...');
@@ -533,8 +561,7 @@ module.exports = {
     createPropertyInTenantTurner,
     markAsPublished,
     main,
-
-    mapToZillowFormat,
+    mapToHotPadsFormat,
     generateZillowFeedXML,
     saveZillowFeedXML,
     processZillowFeed
