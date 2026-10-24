@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rentals>
+  <rental>
+    <id>recRmk54Ydz5eWa9U</id>
+    <listing_id>recRmk54Ydz5eWa9U</listing_id>
+    <status>active</status>
+    <property_type>apartment</property_type>
+    <building_name>143 Arlington Street, Chelsea MA</building_name>
+    <address>143 Arlington Street</address>
+    <unit>A</unit>
+    <city>Chelsea</city>
+    <state>MA</state>
+    <zip>02150</zip>
+    <country>US</country>
+    <bedrooms>0</bedrooms>
+    <bathrooms>1</bathrooms>
+    <square_feet>1000</square_feet>
+    <price>1700</price>
+    <deposit>1700</deposit>
+    <available_date>2026-10-01</available_date>
+    <lease_term>12</lease_term>
+    <title>Renovated</title>
+    <description>FULLY RENOVATED STUDIO APARTMENT | AVAILABLE 10/01/2026 🏡✨
+
+Brand new, fully renovated studio with ultra-modern finishes, ideally located steps from Chelsea&apos;s Silver Line.
+
+Lease Details &amp; Requirements:
+• Rent: $1,700/month
+• Security Deposit: $1,700
+• 1st Month Rent: $1,700
+• Last Month Rent: $1,700
+• No Broker Fee
+• No Commission
+• Proof of income required
+• Credit and background screening
+• No Pets
+• Smoke-free building
+
+Utilities:
+• Hot water included
+
+Tenant Responsible For:
+• Electricity
+• Heat
+
+Appliances Included:
+• Refrigerator
+• Freezer
+• Microwave
+• Stove/Oven
+• Stainless steel appliances
+
+Key Features:
+• Studio | 1 full bathroom
+• Vinyl flooring throughout
+• Granite countertops
+• Custom cabinetry
+• Custom closets
+• Central A/C
+• Oversized tile showers
+• Tall ceilings
+• Professionally managed building
+
+Additional Features:
+• Natural lighting
+• City views
+• Street parking
+• Eligible for City parking program
+
+Location Highlights:
+• Steps from Bellingham Square Station (Silver Line SL3), just blocks from Arlington Street, with direct access to Boston&apos;s Financial District, Waterfront, and Seaport
+• Minutes to Chelsea commuter rail station and Box District Station
+• Quick access to Downtown Boston, Logan International Airport, and the Medical District
+• Close to Bunker Hill Community College, Salem State University, and North Shore Community College
+• Walk to supermarkets, convenience stores, and everyday shopping and dining
+• Highly walkable, commuter-friendly neighborhood with excellent MBTA bus access
+
+Contact us for more information or to schedule a viewing 📞</description>
+    <photos>
+      <photo>https://v5.airtableusercontent.com/v3/u/58/58/1792864800000/W1UrEG5muFjLLUJmK-9c6w/5-nAhHRS39xQYWYRO21qtU07wkapGeS8w9aYbT8ibffmPFrWugXqUKZ0we60EAeREM6npcAviD6Q7H5w-Fky3XWbP1NrN2YdmqN5R2z7Exz08AHG09a4T4cFLPb6rPZVXuhBPeStcD8t2Azbkt2MuItBvijanDd3_eOaMoxHD8o/2ykzw108xTTKvbSiJmokEf1uMMK29rQpeRFrUWoaEFY</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/58/58/1792864800000/rTVJHu5kxXLU91Dmf3GGlQ/R6nwOvDYtbxYG3GyBM1SUjMXcntkez4XrCRrC-30ccixi0zy6KGHyrfRXZq3Uh-qkANWkb8gS6M7XxDehCevMXcxSJZUD6W2GNw6k_fFgzm0hQSn6Pk_8OKGaXyooIPtczK5FqWMnLMl9WCX4qP_8nyRRp5pm2pbZ5Fvu4ak2-aQUqkclpb2DLoVbCh6muZL/szpvCkO4xI-Paej6TwyXusjtkurva3uovTZlvrFGAg8</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/58/58/1792864800000/qBl50VwgUdokZNBox5Z1Cw/WhqCA60pWS-CVnsiKdH_3JcGsCrwJWULty3MVuiL7CDn5L9xo4E1K1wnE07Iw6fWYA2DrgTVjZqjKHxoEADSkf4ow86ySm_3ETzHrzPxKK0uWbq-Uhmfon5BYJdbjjsvf0CgyXzghZwoaPrwfJJHZX3Moro-mDR6eMx6dTkCjdtxbAOtZgPgeDJF1DKa0GRq/pL5taSJnm_T5RKgliXJOOP55-MQnjY0ygFBH8BPLNrE</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/58/58/1792864800000/SfMBeTKWwsN4PnVAAoYwMQ/4iQ9_55BRoGSjhdiEyCpgK9ekD2gKC8zZjV5ATH1ZV3MZyPPOrd8EGc0nc7o8OQui-b6E2L4qnujc2ulaAbR9aOzvQvbpgQz-NqDzpmI-J7C2YI3YunKb7Ur9o2ORguQ2WjUFJijBCS1eYcNYyiiEZJDKWxGY5iNfuM8IUdUoUL_M8wL1KRkbFma3C_z8VQv/qn7DoChLUnGG95q0h7TfsFWmexKFNrl2Q-jCHY1_hdE</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/58/58/1792864800000/ZIyLZOsDc-TAr0l9toAHcQ/zfpHpiWXkH9g8NDcqIo3mknVKbaApaOpSKI2Q8VTNe-D_JDVkYHMp7FxzF7QVusYnbMP64q-QJvftTedx4BfSiu0yyBwnlmKDmWREsgeUxS_I5epGRxwIB6SKghEFEEnY_sXD0e9uV95X4daNdT8xAX25eqGUvdIEDbR-EkzduQsOgDOXtSpkGKnL884NwfT/KstzSJHcN3y8WYW6iij37RcZIa5UeCo8is_2vyyLcA8</photo>
+    </photos>
+    <amenities>
+      <amenity>refrigerator</amenity>
+      <amenity>range_oven</amenity>
+      <amenity>hardwood_floors</amenity>
+    </amenities>
+    <utilities_included>
+      <utility>trash</utility>
+      <utility>water</utility>
+      <utility>gas</utility>
+    </utilities_included>
+    <laundry>none</laundry>
+    <parking>
+      <type>none</type>
+      <spots>0</spots>
+    </parking>
+    <pets_allowed>false</pets_allowed>
+    <cats_allowed>false</cats_allowed>
+    <dogs_allowed>false</dogs_allowed>
+    <contact>
+      <name>JCM Realty Group</name>
+      <email>vserrano@jcmrealtygroup.com</email>
+      <phone>13055550000</phone>
+    </contact>
+    <agent>
+      <name>Vivian Serrano</name>
+      <email>Cmelo@jcmrealtygroup.com</email>
+      <phone>13055550000</phone>
+    </agent>
+  </rental>
+</rentals>
