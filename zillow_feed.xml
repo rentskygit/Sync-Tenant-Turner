@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rentals>
+  <rental>
+    <id>recH3qhWXT0DfVaLC</id>
+    <listing_id>recH3qhWXT0DfVaLC</listing_id>
+    <status>active</status>
+    <property_type>apartment</property_type>
+    <building_name>,  </building_name>
+    <zip>00000</zip>
+    <country>US</country>
+    <bedrooms>0</bedrooms>
+    <bathrooms>0</bathrooms>
+    <square_feet>0</square_feet>
+    <price>0</price>
+    <deposit>0</deposit>
+    <lease_term>12</lease_term>
+    <photos>
+      <photo>https://via.placeholder.com/800x600?text=No+Image</photo>
+    </photos>
+    <laundry>none</laundry>
+    <parking>
+      <type>none</type>
+      <spots>0</spots>
+    </parking>
+    <pets_allowed>false</pets_allowed>
+    <cats_allowed>false</cats_allowed>
+    <dogs_allowed>false</dogs_allowed>
+    <contact>
+      <name>JCM Realty Group</name>
+      <email>info@jcmrealtygroup.com</email>
+      <phone>13055550000</phone>
+    </contact>
+    <agent>
+      <name>Vivian Serrano</name>
+      <email>Cmelo@jcmrealtygroup.com</email>
+      <phone>13055550000</phone>
+    </agent>
+  </rental>
+  <rental>
+    <id>recRmk54Ydz5eWa9U</id>
+    <listing_id>recRmk54Ydz5eWa9U</listing_id>
+    <status>active</status>
+    <property_type>apartment</property_type>
+    <building_name>143 Arlington Street, Chelsea MA</building_name>
+    <address>143 Arlington Street</address>
+    <unit>A</unit>
+    <city>Chelsea</city>
+    <state>MA</state>
+    <zip>02150</zip>
+    <country>US</country>
+    <bedrooms>0</bedrooms>
+    <bathrooms>1</bathrooms>
+    <square_feet>1000</square_feet>
+    <price>1700</price>
+    <deposit>1700</deposit>
+    <available_date>2026-10-01</available_date>
+    <lease_term>12</lease_term>
+    <title>Renovated</title>
+    <description>FULLY RENOVATED STUDIO APARTMENT | AVAILABLE 10/01/2026 🏡✨
+
+Brand new, fully renovated studio with ultra-modern finishes, ideally located steps from Chelsea&apos;s Silver Line.
+
+Lease Details &amp; Requirements:
+• Rent: $1,700/month
+• Security Deposit: $1,700
+• 1st Month Rent: $1,700
+• Last Month Rent: $1,700
+• No Broker Fee
+• No Commission
+• Proof of income required
+• Credit and background screening
+• No Pets
+• Smoke-free building
+
+Utilities:
+• Hot water included
+
+Tenant Responsible For:
+• Electricity
+• Heat
+
+Appliances Included:
+• Refrigerator
+• Freezer
+• Microwave
+• Stove/Oven
+• Stainless steel appliances
+
+Key Features:
+• Studio | 1 full bathroom
+• Vinyl flooring throughout
+• Granite countertops
+• Custom cabinetry
+• Custom closets
+• Central A/C
+• Oversized tile showers
+• Tall ceilings
+• Professionally managed building
+
+Additional Features:
+• Natural lighting
+• City views
+• Street parking
+• Eligible for City parking program
+
+Location Highlights:
+• Steps from Bellingham Square Station (Silver Line SL3), just blocks from Arlington Street, with direct access to Boston&apos;s Financial District, Waterfront, and Seaport
+• Minutes to Chelsea commuter rail station and Box District Station
+• Quick access to Downtown Boston, Logan International Airport, and the Medical District
+• Close to Bunker Hill Community College, Salem State University, and North Shore Community College
+• Walk to supermarkets, convenience stores, and everyday shopping and dining
+• Highly walkable, commuter-friendly neighborhood with excellent MBTA bus access
+
+Contact us for more information or to schedule a viewing 📞</description>
+    <photos>
+      <photo>https://v5.airtableusercontent.com/v3/u/59/59/1795903200000/UzWhCQl9quwVPV_qVjYAvQ/2DzX4Tm0blpTqUP2JbarkXYVioR_loMP25ZngP_oZIBDyFg9NHyI2FRVPj7rd0uFjBwqPDGh5VRCLCHAKIwoWlg73jYxg7ZsqZ1cFb-xk1YkNHjW6Ly59LrNkhTfBPUZ_ucmYM-bL7DxpkTIiwnVDZ-JbOyfun0VmDO5_zFSRjI/mGauNEh-NB_XmacEcHG3NCrxuDiBPsJQsCfHzwXsTbc</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/59/59/1795903200000/VYSH99L19cn6J6wfh_4oqA/-zdo4fUUTq0Z2FOyGXpOjvxysvFX7pTlz0YgcRL69GOYMqUMLzS3_XfOST2SzT4IsoON013OvlEcOulXkS0vYKkuIw4XYtOVtbTzRtYVtG8P3tIuE_BbbI6b-XMotga3bdcwqwiPYOMpFdufaDXcTh_M0fGc_MJziL17SlLg5G23isFNqRXs9PxAIGo-piEF/e6qyDrsTqdX9XViTE-QqDfcE95aQKpYLbx9WFFV0qyk</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/59/59/1795903200000/lJjbRK3Rin-GtGlMp8TpaA/rUSU36dXJ-3oYA9QgEwX46_Z86yAYclo_tylOYAezupNZnxYQBgq5kzyzmEcMas63lJLObZ9zRMIDKGfeFYtPJfXlZCfmuQ8vZSfHHkkQPEDRtUr3_VCXuRmbzgp3Qjz0uIA-HsY6qekwCWr9RMNVI8bIz7R-oU8nfbzcJwDWdJacDp3R9x2yRieHnBnFWTL/aUXGHFLW_Ne4bTsz_wGp2VmURCRhSJsB4shiAPXKBcU</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/59/59/1795903200000/E5KGe0uEjHn9z00wnIxH2A/iZUa4lxChxv8vXSCqcx_Rch4hYYrNUIoVrPSZU8H0VmM6pql6fsAHMi1dWPatUZyahH0bVmSrG-v_9xErZCWzi5OLGopak4321695EYfE7cL9zn1GAUaDzR7X9TJRJQ2mQe0uEIgEAOiIDV1SugiWc3A1xT7V6mNgLm1lrWQKiCI4lj1UMKd31bHPRw_TVrx/DPJqOTVCFJZrENTKQW6LCVDWN0oWbJenCC-x_UdJVYk</photo>
+      <photo>https://v5.airtableusercontent.com/v3/u/59/59/1795903200000/D_bnBKvRmoLy-QVOAP7FYg/ManV-wDW6j2KXvEiUkpaLrjka0vTEZAX4mRn8PsBF5fc_c2CccRCZ7cqq_9OieqHdQvuchr_jekWvCzCso6sR3dF8EisvpQkAAD7ixZn_OvS54_sPm6XXZxMTe4XJGXPFE5hhdkwjRZKx1dap0hc5WISJgqwUU_pGfnha4pHdoOLutCWR85zXYLNDu6Lyr3y/Ns997n5Pz3LRNrjtfFezxrpCMbEn4EI4h8fSYPmbW4s</photo>
+    </photos>
+    <amenities>
+      <amenity>refrigerator</amenity>
+      <amenity>range_oven</amenity>
+      <amenity>hardwood_floors</amenity>
+    </amenities>
+    <utilities_included>
+      <utility>trash</utility>
+      <utility>water</utility>
+      <utility>gas</utility>
+    </utilities_included>
+    <laundry>none</laundry>
+    <parking>
+      <type>none</type>
+      <spots>0</spots>
+    </parking>
+    <pets_allowed>false</pets_allowed>
+    <cats_allowed>false</cats_allowed>
+    <dogs_allowed>false</dogs_allowed>
+    <contact>
+      <name>JCM Realty Group</name>
+      <email>vserrano@jcmrealtygroup.com</email>
+      <phone>13055550000</phone>
+    </contact>
+    <agent>
+      <name>Vivian Serrano</name>
+      <email>Cmelo@jcmrealtygroup.com</email>
+      <phone>13055550000</phone>
+    </agent>
+  </rental>
+</rentals>
